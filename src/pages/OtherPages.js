@@ -78,7 +78,7 @@ export function Consult({ db }) {
 }
 
 const TYPE_CFG = {
-  '정기 기수':    {border:'#1A6B4A',bg:'var(--accent-bg)',text:'var(--accent)'},
+  '정기 기수':    {border:'#5C7A5F',bg:'var(--accent-bg)',text:'var(--accent)'},
   '특별 행사':    {border:'#6B1A5A',bg:'#F3E5F5',text:'#6B1A5A'},
   '단기 프로그램':{border:'#1A5A9A',bg:'var(--blue-bg)',text:'var(--blue)'},
   '개인 입소':    {border:'#C17A00',bg:'var(--amber-bg)',text:'var(--amber)'},
@@ -142,7 +142,7 @@ export function Groups({ db }) {
               const myGroups = groups.filter(g=>(g.멤버IDs||'').split(',').includes(p.ID));
               return (
                 <div key={p.ID} className="list-item">
-                  <div className="avatar" style={{background:'#1A6B4A',width:32,height:32,fontSize:'0.8rem'}}>{p.성명[0]}</div>
+                  <div className="avatar" style={{background:'#7A6552',width:32,height:32,fontSize:'0.8rem'}}>{p.성명[0]}</div>
                   <span style={{fontWeight:600,fontSize:'0.875rem',width:70}}>{p.성명}</span>
                   <span style={{fontSize:'0.8rem',color:'var(--text3)',width:80}}>{p.나이}세 {p.성별}</span>
                   <div style={{display:'flex',gap:6,flexWrap:'wrap',flex:1}}>

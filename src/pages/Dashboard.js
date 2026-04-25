@@ -1,7 +1,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-const AVATAR_COLORS = ['#1A6B4A','#1A5A9A','#6B1A5A','#9A5A1A','#1A5A6B','#6B4A1A'];
+const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
 function Avatar({ name, idx }) {
   return (

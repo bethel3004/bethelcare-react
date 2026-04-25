@@ -18,7 +18,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     <aside style={{
       position: 'fixed', top: 0, left: 0, bottom: 0,
       width: open ? '240px' : '64px',
-      background: '#0D1F17',
+      background: '#3D5A47',
       display: 'flex', flexDirection: 'column',
       transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
       zIndex: 100,
@@ -27,7 +27,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       {/* 로고 */}
       <div style={{ padding: open ? '24px 20px 16px' : '20px 0', textAlign: open ? 'left' : 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
-        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Instrument Serif', serif", color: '#A8D5BC', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Cormorant Garamond', serif", color: '#A8D5BC', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
           {open ? '벧엘수양원' : '벧'}
         </div>
         {open && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
@@ -39,12 +39,12 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <div>
-              <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: '22px', color: '#A8D5BC', lineHeight: 1 }}>{active}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#A8D5BC', lineHeight: 1 }}>{active}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
             <div>
-              <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>전체</div>
             </div>
           </div>
@@ -63,9 +63,9 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
               justifyContent: open ? 'flex-start' : 'center',
               width: '100%',
               padding: open ? '11px 20px' : '13px 0',
-              background: isActive ? 'rgba(168,213,188,0.12)' : 'transparent',
+              background: isActive ? 'rgba(168,213,188,0.2)' : 'transparent',
               border: 'none',
-              borderLeft: isActive ? '2px solid #A8D5BC' : '2px solid transparent',
+              borderLeft: isActive ? '2px solid #C4AD8C' : '2px solid transparent',
               color: isActive ? '#A8D5BC' : 'rgba(255,255,255,0.45)',
               fontSize: '13px',
               fontWeight: isActive ? '600' : '400',
@@ -89,7 +89,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
       {/* 토글 버튼 */}
       <button onClick={() => setOpen(!open)} style={{
         padding: '14px',
-        background: 'rgba(255,255,255,0.04)',
+        background: 'rgba(255,255,255,0.03)',
         border: 'none',
         borderTop: '1px solid rgba(255,255,255,0.07)',
         color: 'rgba(255,255,255,0.3)',
