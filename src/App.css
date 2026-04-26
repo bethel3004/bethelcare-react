@@ -24,7 +24,7 @@
   --radius-sm: 9px;
   --shadow:    0 1px 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.04);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.09);
-  --font-sans: 'DM Sans', 'Noto Sans KR', sans-serif;
+  --font-sans: 'Nanum Gothic', 'Noto Sans KR', sans-serif;
   --font-serif:'Cormorant Garamond', 'Noto Serif KR', Georgia, serif;
   --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
