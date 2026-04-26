@@ -27,7 +27,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       {/* 로고 */}
       <div style={{ padding: open ? '24px 20px 16px' : '20px 0', textAlign: open ? 'left' : 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
-        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Cormorant Garamond', serif", color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Jua', sans-serif", color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
           {open ? '벧엘수양원' : '벧'}
         </div>
         {open && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
@@ -39,12 +39,12 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
+              <div style={{ fontFamily: "'Jua', sans-serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
+              <div style={{ fontFamily: "'Jua', sans-serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>전체</div>
             </div>
           </div>
