@@ -1,7 +1,7 @@
 import React from 'react';
 
 const MENU = [
-  { id:'dashboard', icon:'◈', label:'대시보드' },
+  { id:'dashboard', icon:'◈', label:'오늘의 현황' },
   { id:'patients',  icon:'◉', label:'입소자 관리' },
   { id:'bp_sugar',  icon:'♥', label:'혈당·혈압' },
   { id:'inbody',    icon:'◎', label:'인바디 체성분' },
