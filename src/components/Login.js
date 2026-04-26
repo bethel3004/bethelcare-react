@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // 비밀번호 변경은 아래 PASSWORD 값만 바꾸면 됩니다
-const PASSWORD = 'bethel2026';
+const PASSWORD = '새비밀번호';
 
 export default function Login({ onLogin }) {
   const [pw, setPw] = useState('');
