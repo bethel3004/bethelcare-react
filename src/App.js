@@ -8,9 +8,13 @@ import Consult from './pages/Consult';
 import Groups from './pages/Groups';
 import Stats from './pages/Stats';
 import { SAMPLE_PATIENTS, SAMPLE_BP, SAMPLE_INBODY, SAMPLE_CONSULTS, SAMPLE_GROUPS } from './utils/sampleData';
+import Login from './components/Login';
 import './App.css';
 
 export default function App() {
+  const [auth, setAuth] = useState(
+    sessionStorage.getItem('bethelcare_auth') === 'true'
+  );
   const [page, setPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [patients,  setPatients]  = useState(SAMPLE_PATIENTS);
@@ -30,6 +34,8 @@ export default function App() {
     groups:    <Groups    db={db} />,
     stats:     <Stats     db={db} />,
   };
+
+  if (!auth) return <Login onLogin={() => setAuth(true)} />;
 
   return (
     <div className="app-root">

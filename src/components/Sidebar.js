@@ -18,7 +18,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     <aside style={{
       position: 'fixed', top: 0, left: 0, bottom: 0,
       width: open ? '240px' : '64px',
-      background: '#3D5A47',
+      background: '#2C2118',
       display: 'flex', flexDirection: 'column',
       transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
       zIndex: 100,
@@ -27,7 +27,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       {/* 로고 */}
       <div style={{ padding: open ? '24px 20px 16px' : '20px 0', textAlign: open ? 'left' : 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
-        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Cormorant Garamond', serif", color: '#A8D5BC', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: open ? '18px' : '22px', fontFamily: "'Cormorant Garamond', serif", color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
           {open ? '벧엘수양원' : '벧'}
         </div>
         {open && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
@@ -39,7 +39,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#A8D5BC', lineHeight: 1 }}>{active}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
@@ -63,10 +63,10 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
               justifyContent: open ? 'flex-start' : 'center',
               width: '100%',
               padding: open ? '11px 20px' : '13px 0',
-              background: isActive ? 'rgba(168,213,188,0.2)' : 'transparent',
+              background: isActive ? 'rgba(196,173,140,0.14)' : 'transparent',
               border: 'none',
               borderLeft: isActive ? '2px solid #C4AD8C' : '2px solid transparent',
-              color: isActive ? '#A8D5BC' : 'rgba(255,255,255,0.45)',
+              color: isActive ? '#C4AD8C' : 'rgba(255,255,255,0.45)',
               fontSize: '13px',
               fontWeight: isActive ? '600' : '400',
               fontFamily: "'DM Sans', 'Noto Sans KR', sans-serif",
@@ -85,6 +85,30 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           );
         })}
       </nav>
+
+      {/* 로그아웃 */}
+      <button onClick={() => {
+        sessionStorage.removeItem('bethelcare_auth');
+        window.location.reload();
+      }} style={{
+        padding: '12px',
+        background: 'transparent',
+        border: 'none',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        color: 'rgba(255,255,255,0.25)',
+        cursor: 'pointer',
+        fontSize: '11px',
+        fontFamily: "'DM Sans', sans-serif",
+        letterSpacing: '0.05em',
+        transition: 'all 0.15s',
+        flexShrink: 0,
+        textAlign: 'center',
+      }}
+      onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+      onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.25)'}
+      >
+        {open ? '로그아웃' : '↩'}
+      </button>
 
       {/* 토글 버튼 */}
       <button onClick={() => setOpen(!open)} style={{
