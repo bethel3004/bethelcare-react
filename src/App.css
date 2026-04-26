@@ -67,13 +67,13 @@ body {
 /* ═══ 페이지 헤더 ═══ */
 .page-header { margin-bottom: 30px; }
 .page-header h1 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 2.4rem;
-  font-weight: 300;
+  font-weight: 600;
   color: var(--text);
   letter-spacing: -0.01em;
   line-height: 1.1;
-  font-style: italic;
+  
 }
 .page-header p {
   font-size: 0.825rem;
@@ -141,9 +141,9 @@ body {
   margin-bottom: 12px;
 }
 .kpi-value {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 2.8rem;
-  font-weight: 300;
+  font-weight: 600;
   color: var(--kpi-color, var(--accent));
   line-height: 1;
   letter-spacing: -0.02em;
@@ -388,10 +388,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 }
 @keyframes slideUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
 .modal-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 1.5rem;
-  font-weight: 300;
-  font-style: italic;
+  font-weight: 600;
+  
   margin-bottom: 20px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
@@ -411,9 +411,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 }
 .ib-score { text-align: center; }
 .ib-score-num {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 3.8rem;
-  font-weight: 300;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
 }
