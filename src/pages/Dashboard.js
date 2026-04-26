@@ -71,7 +71,7 @@ export default function Dashboard({ db, setPage }) {
   return (
     <div>
       <div className="page-header">
-        <h1>대시보드</h1>
+        <h1>오늘의 현황</h1>
         <p>벧엘수양원 건강 현황 한눈에 보기</p>
       </div>
 
