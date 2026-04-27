@@ -36,7 +36,7 @@ export function Consult({ db }) {
 
       {tab==='list' ? (
         filtered.length===0 ? <div className="empty-state">상담 기록이 없습니다.</div> :
-        [...filtered].sort((a,b)=>b.날짜.localeCompare(a.날짜)).map(r=>(
+        [...filtered].sort((a,b)=>(b?.날짜||"").localeCompare(a?.날짜||"")).map(r=>(
           <div key={r.ID} className="timeline-item" style={{marginBottom:12}}>
             <div className="timeline-meta">📅 {r.날짜} · 상담자: <b>{r.상담자}</b> · <span style={{color:'var(--accent)',fontWeight:600}}>{r.성명}</span></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:8}}>
@@ -200,7 +200,7 @@ export function Groups({ db }) {
 export function Stats({ db }) {
   const { patients, bp, inbody } = db;
   const keywords = ['고혈압','당뇨','암','대사증후군','고지혈','협착','골다공','불면','갑상선','통풍','간염','뇌경색','부정맥'];
-  const diseaseCount = keywords.map(k=>({ name:k, count:patients.filter(p=>p.병명.includes(k)).length })).filter(d=>d.count>0).sort((a,b)=>b.count-a.count);
+  const diseaseCount = keywords.map(k=>({ name:k, count:patients.filter(p=>(p?.병명||"").includes(k)).length })).filter(d=>d.count>0).sort((a,b)=>b.count-a.count);
   const maxCount = Math.max(1,...diseaseCount.map(d=>d.count));
 
   const warnColors = { '암':'var(--red)', '고혈압':'var(--amber)', '당뇨':'var(--amber)' };
@@ -208,7 +208,7 @@ export function Stats({ db }) {
   const ibChanges = [];
   const pids = [...new Set(inbody.map(r=>r.입소자ID))];
   pids.forEach(pid=>{
-    const rows = inbody.filter(r=>r.입소자ID===pid).sort((a,b)=>a.날짜.localeCompare(b.날짜));
+    const rows = inbody.filter(r=>r.입소자ID===pid).sort((a,b)=>(a?.날짜||"").localeCompare(b?.날짜||""));
     if(rows.length>=2){
       const diff=parseInt(rows[rows.length-1].점수)-parseInt(rows[0].점수);
       ibChanges.push({ name:rows[0].성명, before:parseInt(rows[0].점수), after:parseInt(rows[rows.length-1].점수), diff });
