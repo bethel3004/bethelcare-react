@@ -1,37 +1,33 @@
-// Google Sheets API 연동
-// 사용법: .env 파일에 REACT_APP_SHEET_ID와 REACT_APP_API_KEY 설정
+const WEBHOOK = process.env.REACT_APP_APPS_SCRIPT_URL;
 
-const SHEET_ID = process.env.REACT_APP_SHEET_ID || 'YOUR_SHEET_ID';
-const API_KEY  = process.env.REACT_APP_API_KEY  || 'YOUR_API_KEY';
-const BASE_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
-
-// 시트에서 데이터 읽기
-export async function readSheet(sheetName) {
-  try {
-    const res = await fetch(`${BASE_URL}/${encodeURIComponent(sheetName)}?key=${API_KEY}`);
-    if (!res.ok) throw new Error('Sheet read failed');
-    const json = await res.json();
-    const [headers, ...rows] = json.values || [];
-    return rows.map(row =>
-      headers.reduce((obj, h, i) => ({ ...obj, [h]: row[i] || '' }), {})
-    );
-  } catch (e) {
-    console.warn(`[Sheets] ${sheetName} 읽기 실패, 샘플 데이터 사용`);
-    return null;
+export async function writeToSheet(sheet, action, row, rowIndex) {
+  if (!WEBHOOK) {
+    console.warn('[Sheets] Apps Script URL 없음 — 로컬만 저장');
+    return false;
   }
-}
-
-// 시트에 행 추가 (Apps Script 웹훅 필요)
-export async function appendRow(sheetName, rowData) {
-  const WEBHOOK = process.env.REACT_APP_APPS_SCRIPT_URL;
-  if (!WEBHOOK) { console.warn('Apps Script URL 없음'); return false; }
   try {
     await fetch(WEBHOOK, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'append', sheet: sheetName, data: rowData }),
-      mode: 'no-cors'
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action, sheet, row, rowIndex }),
+      mode: 'no-cors',
     });
+    console.log(`[Sheets] ${action} → ${sheet} 완료`);
     return true;
-  } catch (e) { return false; }
+  } catch (e) {
+    console.error('[Sheets] 쓰기 실패:', e.message);
+    return false;
+  }
+}
+
+export async function appendToSheet(sheet, row) {
+  return writeToSheet(sheet, 'append', row);
+}
+
+export async function updateSheet(sheet, rowIndex, row) {
+  return writeToSheet(sheet, 'update', row, rowIndex);
+}
+
+export async function deleteFromSheet(sheet, rowIndex) {
+  return writeToSheet(sheet, 'delete', {}, rowIndex);
 }

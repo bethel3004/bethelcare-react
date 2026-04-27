@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { appendToSheet } from '../utils/sheets';
 
 export function Consult({ db }) {
   const { patients, consults, setConsults } = db;
@@ -13,7 +14,9 @@ export function Consult({ db }) {
     if (!form.성명) return alert('입소자를 선택하세요.');
     const p = patients.find(x=>x.성명===form.성명);
     const newId = String(Math.max(0,...consults.map(x=>parseInt(x.ID)))+1);
-    setConsults([...consults, { ...form, ID:newId, 입소자ID:p?.ID||'' }]);
+    const newConsult = { ...form, ID:newId, 입소자ID:p?.ID||'' };
+    setConsults([...consults, newConsult]);
+    appendToSheet('상담내역', newConsult);
     setTab('list');
   };
 

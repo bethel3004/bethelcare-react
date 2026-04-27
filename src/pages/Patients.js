@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { appendToSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
@@ -22,7 +23,9 @@ export default function Patients({ db }) {
     e.preventDefault();
     if (!form.성명 || !form.병명) return alert('성명과 병명은 필수입니다.');
     const newId = String(Math.max(0, ...patients.map(p => parseInt(p.ID))) + 1);
-    setPatients([...patients, { ...form, ID: newId }]);
+    const newPatient = { ...form, ID: newId };
+    setPatients([...patients, newPatient]);
+    appendToSheet('입소자', newPatient);
     setForm({ 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
