@@ -4,6 +4,7 @@ import { appendToSheet } from '../utils/sheets';
 export default function Inbody({ db }) {
   const { patients, inbody, setInbody } = db;
   const [tab, setTab] = useState('compare');
+  const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
   const [form, setForm] = useState({
     성명:'', 날짜:'', 구분:'입소 전', 점수:'', 신체나이:'',
@@ -25,7 +26,11 @@ export default function Inbody({ db }) {
   const getAgeA    = r => getField(r, 'After 신체나이', '신체나이');
   const getAdvice  = r => getField(r, '권고', '권고 요약');
 
-  const filtered = sel === '전체' ? inbody : inbody.filter(r => getName(r) === sel);
+  const filtered = inbody.filter(r => {
+    if (sel !== '전체') return getName(r) === sel;
+    if (search) return (getName(r)||'').includes(search);
+    return true;
+  });
 
   // 성명 기준으로 그룹핑
   const names = [...new Set(filtered.map(r => getName(r)).filter(Boolean))];
@@ -69,10 +74,18 @@ export default function Inbody({ db }) {
           <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>측정 기록 입력</button>
         </div>
         {tab==='compare' && (
-          <select className="form-select" style={{width:160}} value={sel} onChange={e=>setSel(e.target.value)}>
-            <option>전체</option>
-            {patients.map(p => <option key={p.ID}>{p.성명}</option>)}
-          </select>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input
+              className="form-input"
+              style={{width:200}}
+              placeholder="🔍 이름 검색..."
+              value={search}
+              onChange={e=>{setSearch(e.target.value);setSel('전체');}}
+            />
+            {search && (
+              <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕ 초기화</button>
+            )}
+          </div>
         )}
       </div>
 
