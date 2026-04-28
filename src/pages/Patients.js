@@ -3,6 +3,44 @@ import { appendToSheet, updateSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
+// 입소기간 달력 입력 컴포넌트
+function AdmissionPicker({ value, onChange }) {
+  const parse = (str) => {
+    if (!str) return [{ start: '', end: '' }];
+    return str.split(/\n/).map(s => {
+      const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
+      if (m) return { start: m[1], end: m[2] };
+      return { start: '', end: '' };
+    }).filter(a => a.start || a.end) || [{ start: '', end: '' }];
+  };
+  const format = (arr) => arr.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
+  const [list, setList] = React.useState(() => parse(value) || [{ start:'', end:'' }]);
+
+  const update = (newList) => { setList(newList); onChange(format(newList)); };
+
+  return (
+    <div>
+      {list.map((a, i) => (
+        <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+          <input type="date" className="form-input" value={a.start}
+            onChange={e=>{const n=[...list];n[i]={...n[i],start:e.target.value};update(n);}}/>
+          <span style={{color:'var(--text3)',flexShrink:0,fontWeight:500}}>~</span>
+          <input type="date" className="form-input" value={a.end}
+            onChange={e=>{const n=[...list];n[i]={...n[i],end:e.target.value};update(n);}}/>
+          {list.length > 1 && (
+            <button type="button" className="btn btn-danger btn-sm" style={{flexShrink:0}}
+              onClick={()=>update(list.filter((_,j)=>j!==i))}>✕</button>
+          )}
+        </div>
+      ))}
+      <button type="button" className="btn btn-ghost btn-sm" style={{marginTop:2}}
+        onClick={()=>update([...list,{start:'',end:''}])}>
+        + 입소 기간 추가
+      </button>
+    </div>
+  );
+}
+
 export default function Patients({ db }) {
   const { patients, setPatients } = db;
   const [search, setSearch] = useState('');
@@ -10,6 +48,7 @@ export default function Patients({ db }) {
   const [selected, setSelected] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
+  const [admissions, setAdmissions] = useState([{ start: '', end: '' }]);
   const [form, setForm] = useState({
     캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
     혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
@@ -22,6 +61,22 @@ export default function Patients({ db }) {
   );
 
   // 신장/체중 컬럼명 정규화
+  // 입소기간 문자열 → 배열로 파싱
+  const parseAdmissions = (str) => {
+    if (!str) return [{ start: '', end: '' }];
+    return str.split(/\n|,/).map(s => {
+      const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
+      if (m) return { start: m[1], end: m[2] };
+      return { start: s.trim(), end: '' };
+    }).filter(a => a.start || a.end);
+  };
+
+  // 배열 → 입소기간 문자열로 변환
+  const formatAdmissions = (arr) =>
+    arr.filter(a => a.start || a.end)
+       .map(a => `${a.start} ~ ${a.end}`)
+       .join('\n');
+
   const getVal = (p, ...keys) => {
     for (const k of keys) if (p[k] && p[k] !== 'undefined') return p[k];
     return '';
@@ -45,9 +100,10 @@ export default function Patients({ db }) {
   const handleEdit = (e) => {
     e.preventDefault();
     if (!editForm.성명 || !editForm.병명) return alert('성명과 병명은 필수입니다.');
-    setPatients(patients.map(p => p.ID === editTarget.ID ? { ...editForm } : p));
-    if (editForm._rowIndex) updateSheet('입소자', editForm._rowIndex, editForm);
-    setEditTarget(null); setEditForm(null); setTab('list');
+    const updatedForm = { ...editForm, 입소기간: formatAdmissions(admissions) };
+    setPatients(patients.map(p => p.ID === editTarget.ID ? updatedForm : p));
+    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm);
+    setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
   };
 
   const f = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) });
@@ -146,7 +202,7 @@ export default function Patients({ db }) {
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
-                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setSelected(null);setTab('edit');}}>✏️ 수정</button>
+                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
                     <button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button>
                   </div>
                 </div>
@@ -239,9 +295,8 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...f('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}>
-                <label className="form-label">입소기간 (여러 번 입소한 경우 쉼표로 구분)</label>
-                <textarea className="form-textarea" placeholder="2026-04-10 ~ 2026-04-20&#10;2026-10-01 ~ 2026-10-15" style={{minHeight:70}} {...f('입소기간')}/>
-                <div style={{fontSize:'0.72rem',color:'var(--text3)',marginTop:4}}>여러 번 입소한 경우 줄바꿈으로 구분해서 입력하세요</div>
+                <label className="form-label">입소기간</label>
+                <AdmissionPicker value={form.입소기간} onChange={v=>setForm({...form,입소기간:v})}/>
               </div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...f('상태')}><option>입소중</option><option>퇴소</option></select>
