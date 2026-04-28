@@ -37,7 +37,7 @@ export default function BpSugar({ db }) {
     const newId = String(Math.max(0,...bp.map(x=>parseInt(x.ID)||0))+1);
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
-    appendToSheet('혈당/혈압', newBp);
+    appendToSheet('혈당혈압', newBp);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
