@@ -44,7 +44,8 @@ export default function App() {
   }, [sheets.inbody]);
 
   useEffect(() => {
-    if (sheets.consults && sheets.consults.length > 0) {
+    if (sheets.bp && sheets.bp.length > 0) { setBp(sheets.bp); }
+  if (sheets.consults && sheets.consults.length > 0) {
       setConsults(sheets.consults);
     }
   }, [sheets.consults]);
