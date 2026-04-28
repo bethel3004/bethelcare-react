@@ -22,6 +22,7 @@ export default function App() {
   // 로컬 상태 (샘플 데이터로 초기화)
   const [patients,  setPatients]  = useState(SAMPLE_PATIENTS);
   const [bp,        setBp]        = useState(SAMPLE_BP);
+  // 구글 시트 혈당혈압 연동
   const [inbody,    setInbody]    = useState(SAMPLE_INBODY);
   const [consults,  setConsults]  = useState(SAMPLE_CONSULTS);
   const [groups,    setGroups]    = useState(SAMPLE_GROUPS);

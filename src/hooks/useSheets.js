@@ -16,24 +16,24 @@ async function fetchSheet(sheetName) {
 }
 
 export function useSheets() {
-  const [data, setData] = useState({ patients: null, inbody: null, consults: null });
+  const [data, setData] = useState({ patients: null, inbody: null, consults: null, bp: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const load = async () => {
     if (!SHEET_ID || !API_KEY) {
-      console.warn('[Sheets] API 키 또는 시트 ID 없음');
       setLoading(false);
       return;
     }
     try {
-      const [patients, inbody, consults] = await Promise.all([
+      const [patients, inbody, consults, bp] = await Promise.all([
         fetchSheet('입소자'),
         fetchSheet('인바디'),
         fetchSheet('상담내역'),
+        fetchSheet('혈당/혈압'),
       ]);
-      console.log('[Sheets] 로드 성공:', patients.length, '명');
-      setData({ patients, inbody, consults });
+      console.log('[Sheets] 로드 성공:', patients.length, '명, 혈당혈압:', bp.length, '건');
+      setData({ patients, inbody, consults, bp });
       setError(null);
     } catch (e) {
       console.error('[Sheets] 로드 실패:', e.message);
