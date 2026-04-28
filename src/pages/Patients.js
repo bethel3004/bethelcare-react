@@ -26,6 +26,7 @@ export default function Patients({ db }) {
     for (const k of keys) if (p[k] && p[k] !== 'undefined') return p[k];
     return '';
   };
+  const getTreatment = p => getVal(p, '치료경력', '치료경력(요약)', '치료 경력');
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -94,7 +95,7 @@ export default function Patients({ db }) {
                     {p.병명}
                   </div>
                 </div>
-                <div style={{fontSize:'0.8rem',color:'var(--text3)'}}>{p.입소기간}</div>
+                <div style={{fontSize:'0.8rem',color:'var(--text3)',whiteSpace:'pre-line'}}>{p.입소기간}</div>
                 <span style={{color:'var(--text3)',fontSize:'0.8rem'}}>{selected?.ID===p.ID?'▲':'▼'}</span>
               </div>
 
@@ -105,6 +106,7 @@ export default function Patients({ db }) {
                       <div className="section-label">인적사항</div>
                       {[
                         ['캠프장소', p.캠프장소],
+                        ['입소기간', p.입소기간],
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
@@ -140,7 +142,7 @@ export default function Patients({ db }) {
                         </div>
                       )}
                       <div className="section-label">치료 경력</div>
-                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px'}}>{p.치료경력||'없음'}</div>
+                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px'}}>{getTreatment(p)||'없음'}</div>
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
@@ -236,7 +238,11 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" placeholder="고혈압 / 당뇨 등" {...f('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...f('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
-              <div className="form-group"><label className="form-label">입소기간</label><input className="form-input" placeholder="2026-04-10 ~ 2026-04-20" {...f('입소기간')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}>
+                <label className="form-label">입소기간 (여러 번 입소한 경우 쉼표로 구분)</label>
+                <textarea className="form-textarea" placeholder="2026-04-10 ~ 2026-04-20&#10;2026-10-01 ~ 2026-10-15" style={{minHeight:70}} {...f('입소기간')}/>
+                <div style={{fontSize:'0.72rem',color:'var(--text3)',marginTop:4}}>여러 번 입소한 경우 줄바꿈으로 구분해서 입력하세요</div>
+              </div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...f('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>
