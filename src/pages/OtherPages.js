@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { appendToSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet } from '../utils/sheets';
 
 // ══ 상담일지 ══
 export function Consult({ db }) {
@@ -17,7 +17,17 @@ export function Consult({ db }) {
     return true;
   });
 
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm, setEditForm] = useState(null);
   const f = k => ({ value:form[k], onChange:e=>setForm({...form,[k]:e.target.value}) });
+  const ef = k => ({ value:editForm?.[k]||'', onChange:e=>setEditForm({...editForm,[k]:e.target.value}) });
+
+  const handleEditConsult = (e) => {
+    e.preventDefault();
+    setConsults(consults.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
+    if (editForm._rowIndex) updateSheet('상담내역', editForm._rowIndex, editForm);
+    setEditTarget(null); setEditForm(null); setTab('list');
+  };
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -37,6 +47,7 @@ export function Consult({ db }) {
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>상담 기록 입력</button>
+          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -76,9 +87,33 @@ export function Consult({ db }) {
                   </div>
                 )}
                 {r.비고 && <div style={{marginTop:8,fontSize:'0.75rem',color:'var(--text3)',background:'var(--bg)',padding:'6px 10px',borderRadius:6}}>{r.비고}</div>}
+                <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️ 수정</button>
+                </div>
               </div>
             ))}
           </>
+      ) : tab === 'edit' && editForm ? (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">✏️ {editTarget?.성명} 상담 수정</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+          </div>
+          <form className="card-body" onSubmit={handleEditConsult}>
+            <div className="form-grid form-grid-2">
+              <div className="form-group"><label className="form-label">입소자</label><input className="form-input" value={editForm.성명||''} disabled style={{background:'var(--bg)'}}/></div>
+              <div className="form-group"><label className="form-label">상담일</label><input type="date" className="form-input" {...ef('날짜')}/></div>
+              <div className="form-group"><label className="form-label">상담자</label><input className="form-input" {...ef('상담자')}/></div>
+              <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...ef('비고')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" {...ef('증세')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" {...ef('변화')}/></div>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+              <button type="submit" className="btn btn-primary">💾 저장하기</button>
+            </div>
+          </form>
+        </div>
       ) : (
         <div className="card">
           <div className="card-header"><span className="card-title">상담 기록 입력</span></div>
@@ -120,6 +155,8 @@ export function Groups({ db }) {
   const [tab, setTab] = useState('list');
   const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'', 멤버IDs:'' });
   const [selected, setSelected] = useState([]);
+  const [editGroup, setEditGroup] = useState(null);
+  const [editSelected, setEditSelected] = useState([]);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -128,6 +165,13 @@ export function Groups({ db }) {
     setGroups([...groups, { ...form, ID:newId, 멤버IDs:selected.join(',') }]);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'', 멤버IDs:'' });
     setSelected([]); setTab('list');
+  };
+
+  const handleEditGroup = (e) => {
+    e.preventDefault();
+    if (!editGroup.그룹명) return alert('기수·행사명을 입력하세요.');
+    setGroups(groups.map(g => g.ID === editGroup.ID ? { ...editGroup, 멤버IDs: editSelected.join(',') } : g));
+    setEditGroup(null); setEditSelected([]); setTab('list');
   };
 
   return (
@@ -162,6 +206,13 @@ export function Groups({ db }) {
                       </div>
                       <span style={{fontSize:'0.8125rem',fontWeight:600,color:cfg.text}}>{members.length}명</span>
                     </div>
+                    <div style={{marginTop:12,display:'flex',justifyContent:'flex-end',gap:6}}>
+                      <button className="btn btn-ghost btn-sm" onClick={()=>{
+                        const ids=(g.멤버IDs||'').split(',').filter(Boolean);
+                        setEditGroup({...g});setEditSelected(ids);setTab('editGroup');
+                      }}>✏️ 수정</button>
+                      <button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button>
+                    </div>
                   </div>
                 </div>
               );
@@ -187,6 +238,43 @@ export function Groups({ db }) {
             })}
           </div>
         </>
+      ) : tab === 'editGroup' && editGroup ? (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">✏️ {editGroup.그룹명} 수정</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
+          </div>
+          <form className="card-body" onSubmit={handleEditGroup}>
+            <div className="form-grid form-grid-2">
+              <div className="form-group"><label className="form-label required">기수·행사명</label>
+                <input className="form-input" value={editGroup.그룹명||''} onChange={e=>setEditGroup({...editGroup,그룹명:e.target.value})}/>
+              </div>
+              <div className="form-group"><label className="form-label">유형</label>
+                <select className="form-select" value={editGroup.유형||'정기 기수'} onChange={e=>setEditGroup({...editGroup,유형:e.target.value})}>
+                  {Object.keys(TYPE_CFG).map(t=><option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">시작일</label><input type="date" className="form-input" value={editGroup.시작일||''} onChange={e=>setEditGroup({...editGroup,시작일:e.target.value})}/></div>
+              <div className="form-group"><label className="form-label">종료일</label><input type="date" className="form-input" value={editGroup.종료일||''} onChange={e=>setEditGroup({...editGroup,종료일:e.target.value})}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">설명</label><input className="form-input" value={editGroup.설명||''} onChange={e=>setEditGroup({...editGroup,설명:e.target.value})}/></div>
+            </div>
+            <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+              {patients.map(p=>(
+                <label key={p.ID} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--bg)',borderRadius:8,cursor:'pointer',border:`1.5px solid ${editSelected.includes(p.ID)?'var(--accent)':'transparent'}`,transition:'all 0.15s'}}>
+                  <input type="checkbox" checked={editSelected.includes(p.ID)} onChange={e=>{
+                    setEditSelected(e.target.checked?[...editSelected,p.ID]:editSelected.filter(x=>x!==p.ID));
+                  }} style={{accentColor:'var(--accent)'}}/>
+                  <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
+                </label>
+              ))}
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
+              <button type="submit" className="btn btn-primary">💾 저장하기</button>
+            </div>
+          </form>
+        </div>
       ) : (
         <div className="card">
           <div className="card-header"><span className="card-title">기수·행사 등록</span></div>
