@@ -153,26 +153,78 @@ const TYPE_CFG = {
 export function Groups({ db }) {
   const { patients, groups, setGroups } = db;
   const [tab, setTab] = useState('list');
-  const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'', 멤버IDs:'' });
+  const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
+  // selected: 문자열 ID 배열
   const [selected, setSelected] = useState([]);
   const [editGroup, setEditGroup] = useState(null);
   const [editSelected, setEditSelected] = useState([]);
+
+  const allIds = patients.map(p => String(p.ID));
 
   const handleAdd = (e) => {
     e.preventDefault();
     if (!form.그룹명) return alert('기수·행사명을 입력하세요.');
     const newId = String(Math.max(0,...groups.map(x=>parseInt(x.ID)||0))+1);
-    setGroups([...groups, { ...form, ID:newId, 멤버IDs:selected.join(',') }]);
-    setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'', 멤버IDs:'' });
-    setSelected([]); setTab('list');
+    setGroups([...groups, { ...form, ID:newId, 멤버IDs: selected.join(',') }]);
+    setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
+    setSelected([]);
+    setTab('list');
   };
 
   const handleEditGroup = (e) => {
     e.preventDefault();
     if (!editGroup.그룹명) return alert('기수·행사명을 입력하세요.');
-    setGroups(groups.map(g => g.ID === editGroup.ID ? { ...editGroup, 멤버IDs: editSelected.join(',') } : g));
+    setGroups(groups.map(g => g.ID === editGroup.ID
+      ? { ...editGroup, 멤버IDs: editSelected.join(',') }
+      : g
+    ));
     setEditGroup(null); setEditSelected([]); setTab('list');
   };
+
+  const toggleAll = (setter, current) => {
+    if (current.length === allIds.length) setter([]);
+    else setter([...allIds]);
+  };
+
+  const CheckboxGrid = ({ selState, setSel }) => (
+    <>
+      <div style={{marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
+        <label style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',fontSize:'0.875rem',fontWeight:600,color:'var(--accent)'}}>
+          <input type="checkbox"
+            checked={selState.length === allIds.length && allIds.length > 0}
+            onChange={()=>toggleAll(setSel, selState)}
+            style={{accentColor:'var(--accent)',width:16,height:16}}/>
+          전체 선택 ({selState.length}/{allIds.length})
+        </label>
+        {selState.length > 0 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([])}>전체 해제</button>
+        )}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+        {patients.map(p => {
+          const pid = String(p.ID);
+          const isChecked = selState.includes(pid);
+          return (
+            <label key={p.ID} style={{
+              display:'flex',alignItems:'center',gap:8,padding:'8px 12px',
+              background:'var(--bg)',borderRadius:8,cursor:'pointer',
+              border:`1.5px solid ${isChecked?'var(--accent)':'transparent'}`,
+              transition:'all 0.15s'
+            }}>
+              <input type="checkbox" checked={isChecked} onChange={e=>{
+                setSel(e.target.checked
+                  ? [...selState, pid]
+                  : selState.filter(x=>x!==pid)
+                );
+              }} style={{accentColor:'var(--accent)'}}/>
+              <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
+              <span style={{fontSize:'0.72rem',color:'var(--text3)'}}>{p.나이}세</span>
+            </label>
+          );
+        })}
+      </div>
+    </>
+  );
 
   return (
     <div>
@@ -180,48 +232,63 @@ export function Groups({ db }) {
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>새 기수·행사 등록</button>
+          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>
+          {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>setTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
         </div>
       </div>
 
       {tab==='list' ? (
         <>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:14,marginBottom:24}}>
-            {groups.map(g=>{
-              const cfg = TYPE_CFG[g.유형]||TYPE_CFG['개인 입소'];
-              const ids = (g.멤버IDs||'').split(',').filter(Boolean).map(Number);
-              const members = patients.filter(p=>ids.includes(parseInt(p.ID)));
-              return (
-                <div key={g.ID} className="card" style={{borderTop:`3px solid ${cfg.border}`}}>
-                  <div className="card-body">
-                    <div style={{display:'inline-block',background:cfg.bg,color:cfg.text,padding:'2px 10px',borderRadius:20,fontSize:'0.7rem',fontWeight:700,marginBottom:10}}>{g.유형}</div>
-                    <div style={{fontSize:'1rem',fontWeight:700,marginBottom:4}}>{g.그룹명}</div>
-                    <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:g.설명?6:10}}>{g.시작일} ~ {g.종료일}</div>
-                    {g.설명&&<div style={{fontSize:'0.8rem',color:'var(--text2)',marginBottom:10}}>{g.설명}</div>}
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{display:'flex'}}>
-                        {members.slice(0,5).map((p,i)=>(
-                          <div key={p.ID} style={{width:24,height:24,borderRadius:'50%',background:cfg.border,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:700,marginLeft:i?-6:0,border:'2px solid white'}}>{p.성명[0]}</div>
-                        ))}
+          {groups.length === 0 ? (
+            <div className="empty-state">등록된 기수·행사가 없습니다.</div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14,marginBottom:24}}>
+              {groups.map(g=>{
+                const cfg = TYPE_CFG[g.유형]||TYPE_CFG['개인 입소'];
+                const memberIds = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>String(x).trim());
+                const members = patients.filter(p => memberIds.includes(String(p.ID)));
+                return (
+                  <div key={g.ID} className="card" style={{borderTop:`3px solid ${cfg.border}`}}>
+                    <div className="card-body">
+                      <div style={{display:'inline-block',background:cfg.bg,color:cfg.text,padding:'2px 10px',borderRadius:20,fontSize:'0.7rem',fontWeight:700,marginBottom:10}}>{g.유형}</div>
+                      <div style={{fontSize:'1rem',fontWeight:700,marginBottom:4}}>{g.그룹명}</div>
+                      <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:g.설명?6:10}}>{g.시작일} ~ {g.종료일}</div>
+                      {g.설명&&<div style={{fontSize:'0.8rem',color:'var(--text2)',marginBottom:10}}>{g.설명}</div>}
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                        <div style={{display:'flex'}}>
+                          {members.slice(0,6).map((p,i)=>(
+                            <div key={p.ID} style={{width:26,height:26,borderRadius:'50%',background:cfg.border,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:700,marginLeft:i?-6:0,border:'2px solid white'}}>{p.성명[0]}</div>
+                          ))}
+                        </div>
+                        <span style={{fontSize:'0.8125rem',fontWeight:600,color:cfg.text}}>{members.length}명</span>
                       </div>
-                      <span style={{fontSize:'0.8125rem',fontWeight:600,color:cfg.text}}>{members.length}명</span>
-                    </div>
-                    <div style={{marginTop:12,display:'flex',justifyContent:'flex-end',gap:6}}>
-                      <button className="btn btn-ghost btn-sm" onClick={()=>{
-                        const ids=(g.멤버IDs||'').split(',').filter(Boolean);
-                        setEditGroup({...g});setEditSelected(ids);setTab('editGroup');
-                      }}>✏️ 수정</button>
-                      <button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button>
+                      {members.length > 0 && (
+                        <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:10,lineHeight:1.6}}>
+                          {members.map(p=>p.성명).join(', ')}
+                        </div>
+                      )}
+                      <div style={{display:'flex',justifyContent:'flex-end',gap:6}}>
+                        <button className="btn btn-ghost btn-sm" onClick={()=>{
+                          const ids = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>String(x).trim());
+                          setEditGroup({...g});
+                          setEditSelected(ids);
+                          setTab('editGroup');
+                        }}>✏️ 수정</button>
+                        <button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="card">
             <div className="card-header"><span className="card-title">전체 입소자 기수 현황</span></div>
             {patients.map(p=>{
-              const myGroups = groups.filter(g=>(g.멤버IDs||'').split(',').includes(p.ID));
+              const myGroups = groups.filter(g =>
+                (g.멤버IDs||'').split(',').map(x=>String(x).trim()).includes(String(p.ID))
+              );
               return (
                 <div key={p.ID} className="list-item">
                   <div className="avatar" style={{background:'#5C7A5F',width:32,height:32,fontSize:'0.8rem'}}>{p.성명[0]}</div>
@@ -259,16 +326,7 @@ export function Groups({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">설명</label><input className="form-input" value={editGroup.설명||''} onChange={e=>setEditGroup({...editGroup,설명:e.target.value})}/></div>
             </div>
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
-              {patients.map(p=>(
-                <label key={p.ID} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--bg)',borderRadius:8,cursor:'pointer',border:`1.5px solid ${editSelected.includes(p.ID)?'var(--accent)':'transparent'}`,transition:'all 0.15s'}}>
-                  <input type="checkbox" checked={editSelected.includes(p.ID)} onChange={e=>{
-                    setEditSelected(e.target.checked?[...editSelected,p.ID]:editSelected.filter(x=>x!==p.ID));
-                  }} style={{accentColor:'var(--accent)'}}/>
-                  <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
-                </label>
-              ))}
-            </div>
+            <CheckboxGrid selState={editSelected} setSel={setEditSelected}/>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
@@ -280,7 +338,7 @@ export function Groups({ db }) {
           <div className="card-header"><span className="card-title">기수·행사 등록</span></div>
           <form className="card-body" onSubmit={handleAdd}>
             <div className="form-grid form-grid-2">
-              <div className="form-group"><label className="form-label required">기수·행사명</label><input className="form-input" placeholder="2026년 3기" value={form.그룹명} onChange={e=>setForm({...form,그룹명:e.target.value})}/></div>
+              <div className="form-group"><label className="form-label required">기수·행사명</label><input className="form-input" placeholder="2026년 2기" value={form.그룹명} onChange={e=>setForm({...form,그룹명:e.target.value})}/></div>
               <div className="form-group"><label className="form-label">유형</label>
                 <select className="form-select" value={form.유형} onChange={e=>setForm({...form,유형:e.target.value})}>
                   {Object.keys(TYPE_CFG).map(t=><option key={t}>{t}</option>)}
@@ -291,19 +349,10 @@ export function Groups({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">설명</label><input className="form-input" value={form.설명} onChange={e=>setForm({...form,설명:e.target.value})}/></div>
             </div>
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
-              {patients.map(p=>(
-                <label key={p.ID} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--bg)',borderRadius:8,cursor:'pointer',border:`1.5px solid ${selected.includes(p.ID)?'var(--accent)':'transparent'}`,transition:'all 0.15s'}}>
-                  <input type="checkbox" checked={selected.includes(p.ID)} onChange={e=>{
-                    setSelected(e.target.checked?[...selected,p.ID]:selected.filter(x=>x!==p.ID));
-                  }} style={{accentColor:'var(--accent)'}}/>
-                  <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
-                </label>
-              ))}
-            </div>
+            <CheckboxGrid selState={selected} setSel={setSelected}/>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
-              <button type="submit" className="btn btn-primary">등록하기</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setSelected([]);setTab('list');}}>취소</button>
+              <button type="submit" className="btn btn-primary">✅ 등록하기</button>
             </div>
           </form>
         </div>
