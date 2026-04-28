@@ -1,46 +1,82 @@
 import React, { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
 import { appendToSheet } from '../utils/sheets';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 export default function BpSugar({ db }) {
   const { patients, bp, setBp } = db;
   const [tab, setTab] = useState('list');
+  const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
   const [form, setForm] = useState({ 입소자ID:'', 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
 
-  const filtered = sel === '전체' ? bp : bp.filter(r => r.성명 === sel);
-  const chartData = filtered.filter(r => sel !== '전체').sort((a,b)=>a.날짜.localeCompare(b.날짜)).map(r=>({
-    날짜: r.날짜.slice(5),
-    수축기: parseInt(r.혈압수축기), 이완기: parseInt(r.혈압이완기), 혈당: parseInt(r.혈당)
-  }));
+  const getName = r => r.성명 || '';
+  const filtered = bp.filter(r => {
+    if (sel !== '전체') return getName(r) === sel;
+    if (search) return (getName(r)||'').includes(search);
+    return true;
+  });
 
-  const bpColor = v => parseInt(v) >= 160 ? 'val-danger' : parseInt(v) >= 140 ? 'val-warning' : 'val-good';
-  const bsColor = v => parseInt(v) >= 126 ? 'val-danger' : parseInt(v) >= 100 ? 'val-warning' : 'val-good';
+  const chartData = sel !== '전체'
+    ? [...filtered].sort((a,b)=>(a?.날짜||'').localeCompare(b?.날짜||'')).map(r=>({
+        날짜: (r.날짜||'').slice(5),
+        수축기: parseInt(r.혈압수축기)||0,
+        이완기: parseInt(r.혈압이완기)||0,
+        혈당: parseInt(r.혈당)||0,
+      }))
+    : [];
+
+  const bpColor = v => parseInt(v)>=160?'val-danger':parseInt(v)>=140?'val-warning':'val-good';
+  const bsColor = v => parseInt(v)>=126?'val-danger':parseInt(v)>=100?'val-warning':'val-good';
 
   const handleAdd = (e) => {
     e.preventDefault();
     if (!form.성명) return alert('입소자를 선택하세요.');
-    const p = patients.find(x => x.성명 === form.성명);
-    const newId = String(Math.max(0,...bp.map(x=>parseInt(x.ID)))+1);
-    setBp([...bp, { ...form, ID:newId, 입소자ID: p?.ID||'' }]);
+    const p = patients.find(x=>x.성명===form.성명);
+    const newId = String(Math.max(0,...bp.map(x=>parseInt(x.ID)||0))+1);
+    const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
+    setBp([...bp, newBp]);
+    appendToSheet('혈당/혈압', newBp);
     setForm({ 입소자ID:'', 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active||!payload?.length) return null;
+    return (
+      <div style={{background:'white',border:'1px solid #eee',borderRadius:10,padding:'10px 14px',fontSize:12}}>
+        <div style={{fontWeight:600,marginBottom:4}}>{label}</div>
+        {payload.map((p,i)=>(
+          <div key={i} style={{color:p.color}}>{p.name}: {p.value}</div>
+        ))}
+      </div>
+    );
+  };
+
   const f = k => ({ value:form[k], onChange:e=>setForm({...form,[k]:e.target.value}) });
 
   return (
     <div>
-      <div className="page-header"><h1>혈당·혈압 기록</h1><p>날짜별 측정 기록 및 추이 분석</p></div>
-      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
+      <div className="page-header">
+        <h1>혈당·혈압 기록</h1>
+        <p>날짜별 측정 기록 및 추이 분석</p>
+      </div>
+
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>
         </div>
         {tab==='list' && (
-          <select className="form-select" style={{width:160}} value={sel} onChange={e=>setSel(e.target.value)}>
-            <option>전체</option>
-            {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-          </select>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input className="form-input" style={{width:180}} placeholder="🔍 이름 검색..."
+              value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
+            <select className="form-select" style={{width:140}} value={sel}
+              onChange={e=>{setSel(e.target.value);setSearch('');}}>
+              <option value="전체">전체</option>
+              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
+            </select>
+            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+          </div>
         )}
       </div>
 
@@ -48,34 +84,51 @@ export default function BpSugar({ db }) {
         <>
           {chartData.length > 1 && (
             <div className="card" style={{marginBottom:16}}>
-              <div className="card-header"><span className="card-title">{sel} — 혈압·혈당 추이</span></div>
+              <div className="card-header">
+                <span className="card-title">{sel} — 혈압·혈당 추이</span>
+              </div>
               <div style={{padding:'12px 8px'}}>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={chartData}>
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={chartData} margin={{top:5,right:20,left:0,bottom:5}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE7"/>
                     <XAxis dataKey="날짜" tick={{fontSize:11,fill:'#9A9A9A'}} axisLine={false} tickLine={false}/>
                     <YAxis tick={{fontSize:11,fill:'#9A9A9A'}} axisLine={false} tickLine={false} domain={[50,210]}/>
-                    <Tooltip contentStyle={{borderRadius:10,fontSize:12,border:'1px solid #eee'}}/>
-                    <ReferenceLine y={140} stroke="#FFCDD2" strokeDasharray="4 2"/>
-                    <Line type="monotone" dataKey="수축기" stroke="#C0392B" strokeWidth={2} dot={{r:3}} name="수축기"/>
-                    <Line type="monotone" dataKey="이완기" stroke="#E8A09A" strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="이완기"/>
-                    <Line type="monotone" dataKey="혈당" stroke="#1A6B4A" strokeWidth={2} dot={{r:3}} name="혈당"/>
+                    <Tooltip content={<CustomTooltip/>}/>
+                    <ReferenceLine y={140} stroke="#FFCDD2" strokeDasharray="4 2" label={{value:'140',position:'right',fontSize:10,fill:'#C62828'}}/>
+                    <ReferenceLine y={126} stroke="#FFE0B2" strokeDasharray="4 2" label={{value:'126',position:'right',fontSize:10,fill:'#E65100'}}/>
+                    <Line type="monotone" dataKey="수축기" stroke="#C0392B" strokeWidth={2.5} dot={{r:4,fill:'#C0392B'}} name="수축기(mmHg)"/>
+                    <Line type="monotone" dataKey="이완기" stroke="#E8A09A" strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="이완기(mmHg)"/>
+                    <Line type="monotone" dataKey="혈당" stroke="#5C7A5F" strokeWidth={2.5} dot={{r:4,fill:'#5C7A5F'}} name="혈당(mg/dL)"/>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
+
           <div className="card">
-            <div className="card-header"><span className="card-title">날짜별 기록</span><span style={{fontSize:'0.8rem',color:'var(--text3)'}}>{filtered.length}건</span></div>
+            <div className="card-header">
+              <span className="card-title">날짜별 기록</span>
+              <span style={{fontSize:'0.8rem',color:'var(--text3)'}}>{filtered.length}건</span>
+            </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>날짜</th><th>이름</th><th>혈당 (mg/dL)</th><th>혈압 (mmHg)</th><th>비고</th></tr></thead>
+                <thead>
+                  <tr><th>날짜</th><th>이름</th><th>혈당 (mg/dL)</th><th>혈압 (mmHg)</th><th>비고</th></tr>
+                </thead>
                 <tbody>
-                  {[...filtered].sort((a,b)=>b.날짜.localeCompare(a.날짜)).map(r=>(
-                    <tr key={r.ID}>
+                  {[...filtered].sort((a,b)=>(b?.날짜||'').localeCompare(a?.날짜||'')).map((r,i)=>(
+                    <tr key={i}>
                       <td style={{fontWeight:600}}>{r.날짜}</td>
                       <td>{r.성명}</td>
-                      <td><span className={bsColor(r.혈당)}>{r.혈당}</span> {parseInt(r.혈당)>=126&&<span className="badge badge-red" style={{fontSize:'0.65rem'}}>주의</span>}</td>
-                      <td><span className={bpColor(r.혈압수축기)}>{r.혈압수축기}/{r.혈압이완기}</span> {parseInt(r.혈압수축기)>=160&&<span className="badge badge-red" style={{fontSize:'0.65rem'}}>매우높음</span>}{parseInt(r.혈압수축기)>=140&&parseInt(r.혈압수축기)<160&&<span className="badge badge-amber" style={{fontSize:'0.65rem'}}>높음</span>}</td>
+                      <td>
+                        {r.혈당 && <span className={bsColor(r.혈당)}>{r.혈당}</span>}
+                        {parseInt(r.혈당)>=126 && <span className="badge badge-red" style={{fontSize:'0.65rem',marginLeft:4}}>주의</span>}
+                      </td>
+                      <td>
+                        {r.혈압수축기 && <span className={bpColor(r.혈압수축기)}>{r.혈압수축기}/{r.혈압이완기}</span>}
+                        {parseInt(r.혈압수축기)>=160 && <span className="badge badge-red" style={{fontSize:'0.65rem',marginLeft:4}}>매우높음</span>}
+                        {parseInt(r.혈압수축기)>=140&&parseInt(r.혈압수축기)<160 && <span className="badge badge-amber" style={{fontSize:'0.65rem',marginLeft:4}}>높음</span>}
+                      </td>
                       <td style={{color:'var(--text3)',fontSize:'0.8rem'}}>{r.비고||'-'}</td>
                     </tr>
                   ))}
@@ -106,7 +159,7 @@ export default function BpSugar({ db }) {
             {parseInt(form.혈당)>=126&&<div className="alert alert-amber" style={{marginTop:12}}>⚠ 혈당 {form.혈당} — 주의 수치.</div>}
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
-              <button type="submit" className="btn btn-primary">저장하기</button>
+              <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
         </div>
