@@ -11,7 +11,7 @@ export default function Patients({ db }) {
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [form, setForm] = useState({
-    성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
+    캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
     혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
     보호자이름:'', 보호자연락처:'', 보호자관계:'',
     병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중'
@@ -34,7 +34,7 @@ export default function Patients({ db }) {
     const newPatient = { ...form, ID: newId };
     setPatients([...patients, newPatient]);
     appendToSheet('입소자', newPatient);
-    setForm({ 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
+    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
@@ -87,6 +87,7 @@ export default function Patients({ db }) {
                   <div style={{fontWeight:600,fontSize:'0.9rem',display:'flex',alignItems:'center',gap:8}}>
                     {p.성명}
                     <span style={{fontSize:'0.75rem',fontWeight:400,color:'var(--text3)'}}>{p.나이}세 {p.성별} · {p.종교}</span>
+                    {p.캠프장소 && <span className="badge badge-blue">{p.캠프장소}</span>}
                     <span className={`badge ${p.상태==='입소중'?'badge-green':'badge-gray'}`}>{p.상태||'퇴소'}</span>
                   </div>
                   <div style={{fontSize:'0.8rem',color:'var(--text3)',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
@@ -103,6 +104,7 @@ export default function Patients({ db }) {
                     <div>
                       <div className="section-label">인적사항</div>
                       {[
+                        ['캠프장소', p.캠프장소],
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
@@ -162,6 +164,7 @@ export default function Patients({ db }) {
           <form className="card-body" onSubmit={handleEdit}>
             <div className="section-label">기본 인적사항</div>
             <div className="form-grid form-grid-3" style={{marginBottom:16}}>
+              <div className="form-group"><label className="form-label">캠프장소</label><input className="form-input" placeholder="부산동래교회" {...ef('캠프장소')}/></div>
               <div className="form-group"><label className="form-label required">성명</label><input className="form-input" {...ef('성명')}/></div>
               <div className="form-group"><label className="form-label">생년월일</label><input className="form-input" {...ef('생년월일')}/></div>
               <div className="form-group"><label className="form-label">나이</label><input className="form-input" type="number" {...ef('나이')}/></div>
@@ -207,6 +210,7 @@ export default function Patients({ db }) {
           <form className="card-body" onSubmit={handleAdd}>
             <div className="section-label">기본 인적사항</div>
             <div className="form-grid form-grid-3" style={{marginBottom:16}}>
+              <div className="form-group"><label className="form-label">캠프장소</label><input className="form-input" placeholder="부산동래교회" {...f('캠프장소')}/></div>
               <div className="form-group"><label className="form-label required">성명</label><input className="form-input" placeholder="홍길동" {...f('성명')}/></div>
               <div className="form-group"><label className="form-label">생년월일</label><input className="form-input" placeholder="1950.1.1" {...f('생년월일')}/></div>
               <div className="form-group"><label className="form-label">나이</label><input className="form-input" type="number" placeholder="70" {...f('나이')}/></div>
