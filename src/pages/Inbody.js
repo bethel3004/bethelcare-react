@@ -211,7 +211,25 @@ export default function Inbody({ db }) {
                     <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
                       <button className="btn btn-ghost btn-sm" onClick={()=>{
                         const r = inbody.find(x=>getName(x)===name);
-                        setEditTarget(r); setEditForm({...r}); setTab('edit');
+                        // 구글 시트 컬럼명 정규화
+                        const normalized = {
+                          ...r,
+                          점수: getField(r,'점수','Before 점수','After 점수'),
+                          신체나이: getField(r,'신체나이','Before 신체나이','After 신체나이'),
+                          기초대사량: getField(r,'기초대사량','Before 기초대사량','After 기초대사량'),
+                          체수분: getField(r,'체수분','Before 체수분','After 체수분'),
+                          단백질: getField(r,'단백질','Before 단백질','After 단백질'),
+                          무기질: getField(r,'무기질','Before 무기질','After 무기질'),
+                          체지방: getField(r,'체지방','Before 체지방','After 체지방'),
+                          체중: getField(r,'체중','Before 체중','After 체중'),
+                          골격근량: getField(r,'골격근량','Before 골격근량','After 골격근량'),
+                          체지방률: getField(r,'체지방률','Before 체지방률','After 체지방률'),
+                          내장지방레벨: getField(r,'내장지방레벨','Before 내장지방레벨','After 내장지방레벨'),
+                          복부비만율: getField(r,'복부비만율','Before 복부비만율','After 복부비만율'),
+                          권고: getField(r,'권고','권고 요약'),
+                          성명: getName(r),
+                        };
+                        setEditTarget(normalized); setEditForm(normalized); setTab('edit');
                       }}>✏️ 수정</button>
                     </div>
                   )}
