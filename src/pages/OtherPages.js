@@ -199,10 +199,10 @@ export function Groups({ db }) {
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
         {patients.map(p => {
-          const pid = String(p.ID);
-          const isChecked = selState.includes(pid);
+          const pid = p.성명;
+          const isChecked = Boolean(pid) && selState.includes(pid);
           return (
-            <label key={p.ID} style={{
+            <label key={pid} style={{
               display:'flex',alignItems:'center',gap:8,padding:'8px 12px',
               background:'var(--bg)',borderRadius:8,cursor:'pointer',
               border:`1.5px solid ${isChecked?'var(--accent)':'transparent'}`,
