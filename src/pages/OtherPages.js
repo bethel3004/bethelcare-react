@@ -159,7 +159,7 @@ export function Groups({ db }) {
   const [editGroup, setEditGroup] = useState(null);
   const [editSelected, setEditSelected] = useState([]);
 
-  const allIds = patients.map(p => String(p.ID));
+  const allIds = patients.map(p => p.성명).filter(Boolean);
 
   const handleAdd = (e) => {
     e.preventDefault();
