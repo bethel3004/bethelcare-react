@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { appendToSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function Inbody({ db }) {
   const { patients, inbody, setInbody, isGuest } = db;
   const [tab, setTab] = useState('compare');
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm, setEditForm] = useState(null);
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
   const [form, setForm] = useState({
@@ -49,6 +51,15 @@ export default function Inbody({ db }) {
     ['내장지방', '내장지방레벨', '', false],
     ['복부비만율', '복부비만율', '', false],
   ];
+
+  const ef = k => ({ value: editForm?.[k]||'', onChange: e => setEditForm({ ...editForm, [k]: e.target.value }) });
+
+  const handleEdit = (e) => {
+    e.preventDefault();
+    setInbody(inbody.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
+    if (editForm._rowIndex) updateSheet('인바디', editForm._rowIndex, editForm);
+    setEditTarget(null); setEditForm(null); setTab('compare');
+  };
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -196,9 +207,50 @@ export default function Inbody({ db }) {
                     </div>
                   )}
                 </div>
+                  {!isGuest && (
+                    <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
+                      <button className="btn btn-ghost btn-sm" onClick={()=>{
+                        const r = inbody.find(x=>getName(x)===name);
+                        setEditTarget(r); setEditForm({...r}); setTab('edit');
+                      }}>✏️ 수정</button>
+                    </div>
+                  )}
               </div>
             );
           })
+      ) : tab === 'edit' && editForm ? (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">✏️ {editTarget?.성명} 인바디 수정</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('compare');}}>취소</button>
+          </div>
+          <form className="card-body" onSubmit={handleEdit}>
+            <div className="form-grid form-grid-2">
+              <div className="form-group"><label className="form-label">이름</label><input className="form-input" value={editForm.성명||''} disabled style={{background:'var(--bg)'}}/></div>
+              <div className="form-group"><label className="form-label">측정일</label><input type="date" className="form-input" {...ef('날짜')}/></div>
+              <div className="form-group"><label className="form-label">구분</label>
+                <select className="form-select" {...ef('구분')}><option>입소 전</option><option>입소 후</option><option>중간 측정</option></select>
+              </div>
+              <div className="form-group"><label className="form-label">종합점수</label><input type="number" className="form-input" {...ef('점수')}/></div>
+              <div className="form-group"><label className="form-label">신체나이</label><input type="number" className="form-input" {...ef('신체나이')}/></div>
+              <div className="form-group"><label className="form-label">기초대사량 (kcal)</label><input type="number" className="form-input" {...ef('기초대사량')}/></div>
+              <div className="form-group"><label className="form-label">체수분 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('체수분')}/></div>
+              <div className="form-group"><label className="form-label">단백질 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('단백질')}/></div>
+              <div className="form-group"><label className="form-label">무기질 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('무기질')}/></div>
+              <div className="form-group"><label className="form-label">체지방 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('체지방')}/></div>
+              <div className="form-group"><label className="form-label">체중 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('체중')}/></div>
+              <div className="form-group"><label className="form-label">골격근량 (kg)</label><input type="number" step="0.1" className="form-input" {...ef('골격근량')}/></div>
+              <div className="form-group"><label className="form-label">체지방률 (%)</label><input type="number" step="0.1" className="form-input" {...ef('체지방률')}/></div>
+              <div className="form-group"><label className="form-label">내장지방레벨</label><input type="number" className="form-input" {...ef('내장지방레벨')}/></div>
+              <div className="form-group"><label className="form-label">복부비만율</label><input type="number" step="0.01" className="form-input" {...ef('복부비만율')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" {...ef('권고')}/></div>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('compare');}}>취소</button>
+              <button type="submit" className="btn btn-primary">💾 저장하기</button>
+            </div>
+          </form>
+        </div>
       ) : (
         <div className="card">
           <div className="card-header"><span className="card-title">인바디 측정 기록 입력</span></div>
