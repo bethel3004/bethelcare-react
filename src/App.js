@@ -55,7 +55,7 @@ useEffect(() => {
   }
 }, [sheets.consults]);
 
-  const db = { patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
+  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
 
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
@@ -67,7 +67,11 @@ useEffect(() => {
     stats:     <Stats     db={db} />,
   };
 
-  if (!auth) return <Login onLogin={() => setAuth(true)} />;
+  const [role, setRole] = React.useState(
+    () => sessionStorage.getItem('bethelcare_role') || 'guest'
+  );
+  const isGuest = role === 'guest';
+  if (!auth) return <Login onLogin={(r) => { setAuth(true); setRole(r || 'guest'); }} />;
 
   return (
     <div className="app-root">

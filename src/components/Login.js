@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 
-// 비밀번호 변경은 아래 PASSWORD 값만 바꾸면 됩니다
-const PASSWORD = '@Matthew33';
+// 계정 설정 - 여기서 비밀번호 관리
+const ACCOUNTS = [
+  { id: 'admin',  pw: 'bethel2026',  role: 'admin',  name: '관리자' },
+  { id: 'staff',  pw: 'bethel1234',  role: 'staff',  name: '직원' },
+  { id: 'guest',  pw: 'guest0000',   role: 'guest',  name: '게스트' },
+];
 
 export default function Login({ onLogin }) {
   const [pw, setPw] = useState('');
@@ -10,9 +14,12 @@ export default function Login({ onLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (pw === PASSWORD) {
+    const account = ACCOUNTS.find(a => a.pw === pw);
+    if (account) {
       sessionStorage.setItem('bethelcare_auth', 'true');
-      onLogin();
+      sessionStorage.setItem('bethelcare_role', account.role);
+      sessionStorage.setItem('bethelcare_name', account.name);
+      onLogin(account.role);
     } else {
       setError(true);
       setShake(true);
@@ -50,7 +57,6 @@ export default function Login({ onLogin }) {
           }
         `}</style>
 
-        {/* 로고 */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -70,11 +76,10 @@ export default function Login({ onLogin }) {
             textTransform: 'uppercase',
             marginTop: 6,
           }}>
-            BethelCare · 관리자
+            BethelCare · 관리시스템
           </div>
         </div>
 
-        {/* 카드 */}
         <div style={{
           background: '#FDFCFA',
           borderRadius: 16,
@@ -89,7 +94,7 @@ export default function Login({ onLogin }) {
             textAlign: 'center',
             lineHeight: 1.6,
           }}>
-            관리자 비밀번호를 입력하세요
+            비밀번호를 입력하세요
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -150,7 +155,6 @@ export default function Login({ onLogin }) {
           </form>
         </div>
 
-        {/* 하단 */}
         <div style={{
           textAlign: 'center',
           marginTop: 20,
