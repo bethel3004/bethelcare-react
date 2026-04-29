@@ -193,8 +193,8 @@ export function Groups({ db }) {
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
         {patients.map(p => {
-          const pid = String(p.ID);
-          const isChecked = selState.map(String).includes(String(pid));
+          const pid = p.성명 || String(p.ID) || String(p.No);
+          const isChecked = Boolean(pid) && selState.includes(pid);
           return (
             <label key={p.ID} style={{
               display:'flex',alignItems:'center',gap:8,padding:'8px 12px',
@@ -204,8 +204,8 @@ export function Groups({ db }) {
             }}>
               <input type="checkbox" checked={isChecked} onChange={e=>{
                 setSel(e.target.checked
-                  ? [...selState, String(pid)]
-                  : selState.filter(x=>String(x)!==String(pid))
+                  ? (pid && !selState.includes(pid) ? [...selState, pid] : selState)
+                  : selState.filter(x=>x!==pid)
                 );
               }} style={{accentColor:'var(--accent)'}}/>
               <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
