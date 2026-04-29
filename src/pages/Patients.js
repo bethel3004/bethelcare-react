@@ -151,7 +151,9 @@ export default function Patients({ db }) {
                     {p.병명}
                   </div>
                 </div>
-                <div style={{fontSize:'0.8rem',color:'var(--text3)',whiteSpace:'pre-line'}}>{p.입소기간}</div>
+                <div style={{fontSize:'0.8rem',color:'var(--text3)'}}>
+                  {(p.입소기간||'').split('\n').filter(Boolean).slice(-1)[0] || ''}
+                </div>
                 <span style={{color:'var(--text3)',fontSize:'0.8rem'}}>{selected?.ID===p.ID?'▲':'▼'}</span>
               </div>
 
@@ -162,7 +164,9 @@ export default function Patients({ db }) {
                       <div className="section-label">인적사항</div>
                       {[
                         ['캠프장소', p.캠프장소],
-                        ['입소기간', p.입소기간],
+                        ['최근 입소기간', (p.입소기간||'').split('\n').filter(Boolean).slice(-1)[0] || '-'],
+                        ['전체 입소이력', (p.입소기간||'').split('\n').filter(Boolean).length > 1
+                          ? (p.입소기간||'') : null],
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
@@ -248,7 +252,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" {...ef('치료경력')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker value={editForm.입소기간||''} onChange={v=>setEditForm({...editForm,입소기간:v})}/></div>
+              <div className="form-group"><label className="form-label">입소기간</label><input className="form-input" {...ef('입소기간')}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>
