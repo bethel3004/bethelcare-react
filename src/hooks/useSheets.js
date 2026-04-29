@@ -91,7 +91,7 @@ export function useSheets() {
         fetchSheet('입소자'),
         fetchSheet('인바디'),
         fetchSheet('상담내역'),
-        fetchSheet('혈당/혈압'),
+        fetchSheet('혈당혈압'),
       ]);
       console.log('[Sheets] 로드 성공:', patients.length, '명, 혈당혈압:', bp.length, '건');
       setData({
