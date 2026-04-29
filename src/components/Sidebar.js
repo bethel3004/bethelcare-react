@@ -14,7 +14,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   const active = db.patients.filter(p => p.상태 === '입소중').length;
   const total  = db.patients.length;
   const role = db.role || 'admin';
-  const roleName = role === 'admin' ? '관리자' : role === 'staff' ? '직원' : '게스트';
+  const roleName = role === 'admin' ? '관리자' : role === 'staff' ? 'STAFF' : '게스트';
   const roleColor = role === 'guest' ? '#8A6B4A' : role === 'staff' ? '#4A6B8A' : '#5C7A5F';
 
   return (
