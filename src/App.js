@@ -61,6 +61,7 @@ useEffect(() => {
 
 
 
+  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
     patients:  <Patients  db={db} />,
@@ -76,7 +77,6 @@ useEffect(() => {
     setRole(r || 'guest');
     setAuth(true);
   }} />;
-  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
 
   return (
     <div className="app-root">
