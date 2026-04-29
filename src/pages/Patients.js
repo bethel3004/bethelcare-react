@@ -206,8 +206,7 @@ export default function Patients({ db }) {
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
-                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
-                    <button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button>
+                    {!isGuest && <><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button></>}
                   </div>
                 </div>
               )}
