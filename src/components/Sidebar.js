@@ -21,7 +21,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     <aside style={{
       position: 'fixed', top: 0, left: 0, bottom: 0,
       width: open ? '240px' : '64px',
-      background: '#2C2118',
+      background: '#4A7C6A',
       display: 'flex', flexDirection: 'column',
       transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
       zIndex: 100,
