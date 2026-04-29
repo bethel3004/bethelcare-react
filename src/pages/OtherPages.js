@@ -242,8 +242,8 @@ export function Groups({ db }) {
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14,marginBottom:24}}>
               {groups.map(g=>{
                 const cfg = TYPE_CFG[g.유형]||TYPE_CFG['개인 입소'];
-                const memberIds = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>String(x).trim());
-                const members = patients.filter(p => memberIds.includes(String(p.ID)));
+                const memberIds = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>x.trim());
+                const members = patients.filter(p => memberIds.includes(p.성명) || memberIds.includes(String(p.ID)));
                 return (
                   <div key={g.ID} className="card" style={{borderTop:`3px solid ${cfg.border}`}}>
                     <div className="card-body">
@@ -284,7 +284,7 @@ export function Groups({ db }) {
             <div className="card-header"><span className="card-title">전체 입소자 기수 현황</span></div>
             {patients.map(p=>{
               const myGroups = groups.filter(g =>
-                (g.멤버IDs||'').split(',').map(x=>String(x).trim()).includes(String(p.ID))
+                (g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean).some(id => id===p.성명 || id===String(p.ID))
               );
               return (
                 <div key={p.ID} className="list-item">
