@@ -51,8 +51,8 @@ export default function App() {
 
   if (!auth) return <Login onLogin={(r) => {
     sessionStorage.setItem('bethelcare_role', r || 'admin');
-    setRole(r || 'admin');
-    setAuth(true);
+    sessionStorage.setItem('bethelcare_auth', 'true');
+    window.location.reload();
   }} />;
 
   const isGuest = role === 'guest';
