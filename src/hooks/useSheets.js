@@ -56,6 +56,15 @@ function normalizeAdmissionPeriod(str) {
 function normalizePatient(row) {
   return {
     ...row,
+    치료경력: row['치료경력'] || row['치료경력(요약)'] || row['치료 경력'] || '',
+    신장: row['신장'] || row['신장(cm)'] || '',
+    현재체중: row['현재체중'] || row['현재체중(kg)'] || '',
+    혈압_입소시: row['혈압_입소시'] || row['혈압(입소시)'] || '',
+    혈당_입소시: row['혈당_입소시'] || row['혈당(입소시)'] || '',
+    본인연락처: row['본인연락처'] || row['본인 연락처'] || '',
+    보호자이름: row['보호자이름'] || row['보호자 이름'] || '',
+    보호자연락처: row['보호자연락처'] || row['보호자 연락처'] || '',
+    보호자관계: row['보호자관계'] || row['보호자 관계'] || '',
     입소기간: normalizeAdmissionPeriod(row['입소기간'] || row['입소 기간'] || ''),
   };
 }
@@ -91,7 +100,7 @@ export function useSheets() {
         fetchSheet('입소자'),
         fetchSheet('인바디'),
         fetchSheet('상담내역'),
-        fetchSheet('혈당혈압'),
+        fetchSheet('혈당/혈압'),
       ]);
       console.log('[Sheets] 로드 성공:', patients.length, '명, 혈당혈압:', bp.length, '건');
       setData({
