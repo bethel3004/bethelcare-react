@@ -188,13 +188,19 @@ export function Groups({ db }) {
 
   const CheckboxGrid = ({ selState, setSel }) => (
     <>
-      <div style={{marginBottom:10}}>
+      <div style={{marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
         <span style={{fontSize:'0.875rem',color:'var(--text3)'}}>{selState.length}명 선택됨</span>
+        {selState.length > 0 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([])}>전체 해제</button>
+        )}
+        {selState.length === 0 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([...allIds])}>전체 선택</button>
+        )}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
         {patients.map(p => {
-          const pid = p.성명 || String(p.ID) || String(p.No);
-          const isChecked = Boolean(pid) && selState.includes(pid);
+          const pid = String(p.ID);
+          const isChecked = selState.includes(pid);
           return (
             <label key={p.ID} style={{
               display:'flex',alignItems:'center',gap:8,padding:'8px 12px',
@@ -204,7 +210,7 @@ export function Groups({ db }) {
             }}>
               <input type="checkbox" checked={isChecked} onChange={e=>{
                 setSel(e.target.checked
-                  ? (pid && !selState.includes(pid) ? [...selState, pid] : selState)
+                  ? [...selState, pid]
                   : selState.filter(x=>x!==pid)
                 );
               }} style={{accentColor:'var(--accent)'}}/>
@@ -357,6 +363,7 @@ export function Stats({ db }) {
   const { patients, bp, inbody } = db;
   const [search, setSearch] = useState('');
   const [selPatient, setSelPatient] = useState('전체');
+  const [bpSearch, setBpSearch] = useState('');
 
   // 질환 분포
   const keywords = ['고혈압','당뇨','암','대사증후군','고지혈','협착','골다공','불면','갑상선','통풍','간염','뇌경색','부정맥'];
@@ -465,11 +472,31 @@ export function Stats({ db }) {
       <div className="card" style={{marginBottom:16}}>
         <div className="card-header">
           <span className="card-title">개인별 혈압·혈당 추이</span>
-          <select className="form-select" style={{width:160}} value={selPatient}
-            onChange={e=>setSelPatient(e.target.value)}>
-            <option value="전체">입소자 선택</option>
-            {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-          </select>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input className="form-input" style={{width:140}} placeholder="🔍 이름 검색..."
+              value={bpSearch}
+              onChange={e=>{
+                setBpSearch(e.target.value);
+                const found = patients.find(p=>p.성명===e.target.value);
+                if(found) setSelPatient(found.성명);
+                else if(!e.target.value) setSelPatient('전체');
+              }}
+              list="bp-patient-list"
+            />
+            <datalist id="bp-patient-list">
+              {patients.filter(p=>(p.성명||'').includes(bpSearch)).map(p=>(
+                <option key={p.ID} value={p.성명}/>
+              ))}
+            </datalist>
+            <select className="form-select" style={{width:140}} value={selPatient}
+              onChange={e=>{setSelPatient(e.target.value);setBpSearch(e.target.value==='전체'?'':e.target.value);}}>
+              <option value="전체">전체 선택</option>
+              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
+            </select>
+            {selPatient!=='전체' && (
+              <button className="btn btn-ghost btn-sm" onClick={()=>{setSelPatient('전체');setBpSearch('');}}>✕</button>
+            )}
+          </div>
         </div>
         <div style={{padding:'12px 8px'}}>
           {bpFiltered.length > 0 ? (
