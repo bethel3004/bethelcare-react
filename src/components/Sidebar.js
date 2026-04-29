@@ -86,6 +86,13 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         })}
       </nav>
 
+      {open && role && (
+        <div style={{padding:'4px 20px 8px'}}>
+          <span style={{fontSize:'0.7rem',background:roleColor,color:'white',padding:'2px 10px',borderRadius:20,fontWeight:600}}>
+            {roleName}
+          </span>
+        </div>
+      )}
       {/* 로그아웃 */}
       <button onClick={() => {
         sessionStorage.removeItem('bethelcare_auth');
