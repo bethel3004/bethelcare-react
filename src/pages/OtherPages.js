@@ -154,12 +154,9 @@ export function Groups({ db }) {
   const { patients, groups, setGroups } = db;
   const [tab, setTab] = useState('list');
   const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
-  // selected: 문자열 ID 배열
   const [selected, setSelected] = useState([]);
   const [editGroup, setEditGroup] = useState(null);
   const [editSelected, setEditSelected] = useState([]);
-
-  const allIds = patients.map(p => p.성명).filter(Boolean);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -181,28 +178,21 @@ export function Groups({ db }) {
     setEditGroup(null); setEditSelected([]); setTab('list');
   };
 
-  const toggleAll = (setter, current) => {
-    if (current.length === allIds.length) setter([]);
-    else setter([...allIds]);
+  const getMembers = (g) => {
+    const ids = (g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);
+    return patients.filter(p => ids.includes(p.성명));
   };
 
   const CheckboxGrid = ({ selState, setSel }) => (
     <>
-      <div style={{marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
+      <div style={{marginBottom:10}}>
         <span style={{fontSize:'0.875rem',color:'var(--text3)'}}>{selState.length}명 선택됨</span>
-        {selState.length > 0 && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([])}>전체 해제</button>
-        )}
-        {selState.length === 0 && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([...allIds])}>전체 선택</button>
-        )}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
         {patients.map(p => {
-          const pid = p.성명;
-          const isChecked = Boolean(pid) && selState.includes(pid);
+          const isChecked = selState.includes(p.성명);
           return (
-            <label key={pid} style={{
+            <label key={p.성명} style={{
               display:'flex',alignItems:'center',gap:8,padding:'8px 12px',
               background:'var(--bg)',borderRadius:8,cursor:'pointer',
               border:`1.5px solid ${isChecked?'var(--accent)':'transparent'}`,
@@ -210,8 +200,8 @@ export function Groups({ db }) {
             }}>
               <input type="checkbox" checked={isChecked} onChange={e=>{
                 setSel(e.target.checked
-                  ? [...selState, pid]
-                  : selState.filter(x=>x!==pid)
+                  ? [...selState, p.성명]
+                  : selState.filter(x=>x!==p.성명)
                 );
               }} style={{accentColor:'var(--accent)'}}/>
               <span style={{fontSize:'0.875rem',fontWeight:500}}>{p.성명}</span>
@@ -242,8 +232,7 @@ export function Groups({ db }) {
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14,marginBottom:24}}>
               {groups.map(g=>{
                 const cfg = TYPE_CFG[g.유형]||TYPE_CFG['개인 입소'];
-                const memberIds = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>x.trim());
-                const members = patients.filter(p => memberIds.includes(p.성명) || memberIds.includes(String(p.ID)));
+                const members = getMembers(g);
                 return (
                   <div key={g.ID} className="card" style={{borderTop:`3px solid ${cfg.border}`}}>
                     <div className="card-body">
@@ -251,10 +240,10 @@ export function Groups({ db }) {
                       <div style={{fontSize:'1rem',fontWeight:700,marginBottom:4}}>{g.그룹명}</div>
                       <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:g.설명?6:10}}>{g.시작일} ~ {g.종료일}</div>
                       {g.설명&&<div style={{fontSize:'0.8rem',color:'var(--text2)',marginBottom:10}}>{g.설명}</div>}
-                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
                         <div style={{display:'flex'}}>
                           {members.slice(0,6).map((p,i)=>(
-                            <div key={p.ID} style={{width:26,height:26,borderRadius:'50%',background:cfg.border,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:700,marginLeft:i?-6:0,border:'2px solid white'}}>{p.성명[0]}</div>
+                            <div key={p.성명} style={{width:26,height:26,borderRadius:'50%',background:cfg.border,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:700,marginLeft:i?-6:0,border:'2px solid white'}}>{p.성명[0]}</div>
                           ))}
                         </div>
                         <span style={{fontSize:'0.8125rem',fontWeight:600,color:cfg.text}}>{members.length}명</span>
@@ -266,10 +255,8 @@ export function Groups({ db }) {
                       )}
                       <div style={{display:'flex',justifyContent:'flex-end',gap:6}}>
                         <button className="btn btn-ghost btn-sm" onClick={()=>{
-                          const ids = (g.멤버IDs||'').split(',').filter(Boolean).map(x=>String(x).trim());
-                          setEditGroup({...g});
-                          setEditSelected(ids);
-                          setTab('editGroup');
+                          const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);
+                          setEditGroup({...g});setEditSelected(ids);setTab('editGroup');
                         }}>✏️ 수정</button>
                         <button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button>
                       </div>
@@ -279,15 +266,12 @@ export function Groups({ db }) {
               })}
             </div>
           )}
-
           <div className="card">
             <div className="card-header"><span className="card-title">전체 입소자 기수 현황</span></div>
             {patients.map(p=>{
-              const myGroups = groups.filter(g =>
-                (g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean).some(id => id===p.성명 || id===String(p.ID))
-              );
+              const myGroups = groups.filter(g=>(g.멤버IDs||'').split(',').map(x=>x.trim()).includes(p.성명));
               return (
-                <div key={p.ID} className="list-item">
+                <div key={p.성명} className="list-item">
                   <div className="avatar" style={{background:'#5C7A5F',width:32,height:32,fontSize:'0.8rem'}}>{p.성명[0]}</div>
                   <span style={{fontWeight:600,fontSize:'0.875rem',width:70}}>{p.성명}</span>
                   <span style={{fontSize:'0.8rem',color:'var(--text3)',width:80}}>{p.나이}세 {p.성별}</span>
@@ -302,7 +286,7 @@ export function Groups({ db }) {
             })}
           </div>
         </>
-      ) : tab === 'editGroup' && editGroup ? (
+      ) : tab==='editGroup' && editGroup ? (
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editGroup.그룹명} 수정</span>
@@ -358,7 +342,7 @@ export function Groups({ db }) {
   );
 }
 
-// ══ 통계·보고서 ══
+
 export function Stats({ db }) {
   const { patients, bp, inbody } = db;
   const [search, setSearch] = useState('');
