@@ -72,7 +72,7 @@ export default function Dashboard({ db, setPage }) {
     <div>
       <div className="page-header">
         <h1>오늘의 현황</h1>
-        <p>벧엘수양원 건강 현황 한눈에 보기</p>
+        <p>벧엘수양원 현황 한눈에 보기</p>
       </div>
 
       <div className="kpi-grid">
