@@ -7,7 +7,7 @@ const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A705
 function AdmissionPicker({ value, onChange }) {
   const parse = (str) => {
     if (!str) return [{ start: '', end: '' }];
-    return str.split(/\n/).map(s => {
+    return str.split(/[\n/]/).map(s => { s = s.trim();
       const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
       if (m) return { start: m[1], end: m[2] };
       return { start: '', end: '' };
@@ -152,7 +152,7 @@ export default function Patients({ db }) {
                   </div>
                 </div>
                 <div style={{fontSize:'0.8rem',color:'var(--text3)'}}>
-                  {(p.입소기간||'').split('\n').filter(Boolean).slice(-1)[0] || ''}
+                  {(p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).slice(-1)[0] || ''}
                 </div>
                 <span style={{color:'var(--text3)',fontSize:'0.8rem'}}>{selected?.ID===p.ID?'▲':'▼'}</span>
               </div>
@@ -164,9 +164,9 @@ export default function Patients({ db }) {
                       <div className="section-label">인적사항</div>
                       {[
                         ['캠프장소', p.캠프장소],
-                        ['최근 입소기간', (p.입소기간||'').split('\n').filter(Boolean).slice(-1)[0] || '-'],
+                        ['최근 입소기간', (p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).slice(-1)[0] || '-'],
                         ['전체 입소이력', (p.입소기간||'').split('\n').filter(Boolean).length > 1
-                          ? (p.입소기간||'') : null],
+                          ? (p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).join('\n') : null],
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
