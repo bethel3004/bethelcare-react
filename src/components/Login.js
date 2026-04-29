@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 // 계정 설정 - 여기서 비밀번호 관리
 const ACCOUNTS = [
-  { id: 'admin',  pw: 'bethel2026',  role: 'admin',  name: '관리자' },
+  { id: 'admin',  pw: '@Matthew33',  role: 'admin',  name: '관리자' },
   { id: 'staff',  pw: 'bethel1234',  role: 'staff',  name: '직원' },
   { id: 'guest',  pw: 'guest0000',   role: 'guest',  name: '게스트' },
 ];
