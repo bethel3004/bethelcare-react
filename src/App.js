@@ -17,7 +17,7 @@ export default function App() {
     sessionStorage.getItem('bethelcare_auth') === 'true'
   );
   const [role, setRole] = useState(
-    () => sessionStorage.getItem('bethelcare_role') || 'admin'
+    sessionStorage.getItem('bethelcare_role') || 'admin'
   );
   const isGuest = role === 'guest';
   const [page, setPage] = useState('dashboard');
@@ -71,7 +71,11 @@ useEffect(() => {
     stats:     <Stats     db={db} />,
   };
 
-  if (!auth) return <Login onLogin={(r) => { setAuth(true); setRole(r || 'guest'); }} />;
+  if (!auth) return <Login onLogin={(r) => {
+    sessionStorage.setItem('bethelcare_role', r || 'guest');
+    setRole(r || 'guest');
+    setAuth(true);
+  }} />;
 
   return (
     <div className="app-root">
