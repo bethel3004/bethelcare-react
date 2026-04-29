@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { appendToSheet } from '../utils/sheets';
 
 export default function Inbody({ db }) {
-  const { patients, inbody, setInbody } = db;
+  const { patients, inbody, setInbody, isGuest } = db;
   const [tab, setTab] = useState('compare');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -71,7 +71,7 @@ export default function Inbody({ db }) {
       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
         <div className="tabs">
           <button className={`tab ${tab==='compare'?'active':''}`} onClick={()=>setTab('compare')}>Before &amp; After</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>측정 기록 입력</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>측정 기록 입력</button>}
         </div>
         {tab==='compare' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>

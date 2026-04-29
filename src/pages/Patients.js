@@ -42,7 +42,7 @@ function AdmissionPicker({ value, onChange }) {
 }
 
 export default function Patients({ db }) {
-  const { patients, setPatients } = db;
+  const { patients, setPatients, isGuest } = db;
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('list');
   const [selected, setSelected] = useState(null);
@@ -119,7 +119,7 @@ export default function Patients({ db }) {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>신규 등록</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>신규 등록</button>}
           {editTarget && (
             <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>
               ✏️ {editTarget.성명} 수정
@@ -252,7 +252,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" {...ef('치료경력')}/></div>
-              <div className="form-group" style={{gridColumn:"1/-1"}}><label className="form-label">입소기간</label><AdmissionPicker value={editForm?.입소기간||""} onChange={v=>setEditForm({...editForm,입소기간:v})}/></div>
+              <div className="form-group"><label className="form-label">입소기간</label><input className="form-input" {...ef('입소기간')}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>

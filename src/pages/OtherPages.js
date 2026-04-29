@@ -4,7 +4,7 @@ import { appendToSheet, updateSheet } from '../utils/sheets';
 
 // ══ 상담일지 ══
 export function Consult({ db }) {
-  const { patients, consults, setConsults } = db;
+  const { patients, consults, setConsults, isGuest } = db;
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -46,7 +46,7 @@ export function Consult({ db }) {
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>상담 기록 입력</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>상담 기록 입력</button>}
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
@@ -87,9 +87,7 @@ export function Consult({ db }) {
                   </div>
                 )}
                 {r.비고 && <div style={{marginTop:8,fontSize:'0.75rem',color:'var(--text3)',background:'var(--bg)',padding:'6px 10px',borderRadius:6}}>{r.비고}</div>}
-                <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
-                  <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️ 수정</button>
-                </div>
+                {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️ 수정</button></div>}
               </div>
             ))}
           </>
@@ -151,7 +149,7 @@ const TYPE_CFG = {
 };
 
 export function Groups({ db }) {
-  const { patients, groups, setGroups } = db;
+  const { patients, groups, setGroups, isGuest } = db;
   const [tab, setTab] = useState('list');
   const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
   const [selected, setSelected] = useState([]);
@@ -219,7 +217,7 @@ export function Groups({ db }) {
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>}
           {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>setTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
         </div>
       </div>
@@ -253,13 +251,7 @@ export function Groups({ db }) {
                           {members.map(p=>p.성명).join(', ')}
                         </div>
                       )}
-                      <div style={{display:'flex',justifyContent:'flex-end',gap:6}}>
-                        <button className="btn btn-ghost btn-sm" onClick={()=>{
-                          const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);
-                          setEditGroup({...g});setEditSelected(ids);setTab('editGroup');
-                        }}>✏️ 수정</button>
-                        <button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button>
-                      </div>
+                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button></div>}
                     </div>
                   </div>
                 );
@@ -344,7 +336,7 @@ export function Groups({ db }) {
 
 
 export function Stats({ db }) {
-  const { patients, bp, inbody } = db;
+  const { patients, bp, inbody, isGuest } = db;
   const [search, setSearch] = useState('');
   const [selPatient, setSelPatient] = useState('전체');
   const [bpSearch, setBpSearch] = useState('');

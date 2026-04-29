@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
-  const { patients, bp, setBp } = db;
+  const { patients, bp, setBp, isGuest } = db;
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -37,7 +37,7 @@ export default function BpSugar({ db }) {
     const newId = String(Math.max(0,...bp.map(x=>parseInt(x.ID)||0))+1);
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
-    appendToSheet('혈당혈압', newBp);
+    appendToSheet('혈당/혈압', newBp);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
@@ -69,7 +69,7 @@ export default function BpSugar({ db }) {
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:8}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
-          <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
@@ -132,9 +132,7 @@ export default function BpSugar({ db }) {
                         {parseInt(r.혈압수축기)>=140&&parseInt(r.혈압수축기)<160 && <span className="badge badge-amber" style={{fontSize:'0.65rem',marginLeft:4}}>높음</span>}
                       </td>
                       <td style={{color:'var(--text3)',fontSize:'0.8rem'}}>{r.비고||'-'}</td>
-                      <td>
-                        <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️</button>
-                      </td>
+                      <td>{!isGuest && <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️</button>}</td>
                     </tr>
                   ))}
                 </tbody>
