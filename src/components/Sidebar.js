@@ -21,7 +21,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     <aside style={{
       position: 'fixed', top: 0, left: 0, bottom: 0,
       width: open ? '240px' : '64px',
-      background: '#4A7C6A',
+      background: '#2C2118',
       display: 'flex', flexDirection: 'column',
       transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
       zIndex: 100,
@@ -30,7 +30,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       {/* 로고 */}
       <div onClick={()=>setPage('dashboard')} style={{ padding: open ? '24px 20px 16px' : '20px 0', textAlign: open ? 'left' : 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0, cursor:'pointer' }}>
-        <div style={{ fontSize: open ? '27px' : '33px', fontFamily: "'Jua', sans-serif", color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: open ? '27px' : '33px', fontFamily: "'Cormorant Garamond', serif", color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
           {open ? '벧엘수양원' : '벧'}
         </div>
         {open && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
@@ -42,12 +42,12 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
           <div style={{ display: 'flex', gap: '16px' }}>
             <div>
-              <div style={{ fontFamily: "'Jua', sans-serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
             <div>
-              <div style={{ fontFamily: "'Jua', sans-serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
               <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>전체</div>
             </div>
           </div>
@@ -89,21 +89,19 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         })}
       </nav>
 
-      {open && role && (
-        <div style={{padding:'4px 20px 8px'}}>
+      {/* 역할 배지 */}
+      {open && (
+        <div style={{padding:'8px 20px 4px'}}>
           <span style={{fontSize:'0.7rem',background:roleColor,color:'white',padding:'2px 10px',borderRadius:20,fontWeight:600}}>
             {roleName}
           </span>
         </div>
       )}
-      {open && (
-        <div style={{padding:'4px 20px 8px'}}>
-          <span style={{fontSize:'0.7rem',background:roleColor,color:'white',padding:'2px 10px',borderRadius:20,fontWeight:600}}>{roleName}</span>
-        </div>
-      )}
+
       {/* 로그아웃 */}
       <button onClick={() => {
         sessionStorage.removeItem('bethelcare_auth');
+        sessionStorage.removeItem('bethelcare_role');
         window.location.reload();
       }} style={{
         padding: '12px',
