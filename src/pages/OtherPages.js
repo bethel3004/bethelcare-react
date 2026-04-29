@@ -189,15 +189,12 @@ export function Groups({ db }) {
   const CheckboxGrid = ({ selState, setSel }) => (
     <>
       <div style={{marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
-        <label style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',fontSize:'0.875rem',fontWeight:600,color:'var(--accent)'}}>
-          <input type="checkbox"
-            checked={selState.length === allIds.length && allIds.length > 0}
-            onChange={()=>toggleAll(setSel, selState)}
-            style={{accentColor:'var(--accent)',width:16,height:16}}/>
-          전체 선택 ({selState.length}/{allIds.length})
-        </label>
+        <span style={{fontSize:'0.875rem',color:'var(--text3)'}}>{selState.length}명 선택됨</span>
         {selState.length > 0 && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([])}>전체 해제</button>
+        )}
+        {selState.length === 0 && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={()=>setSel([...allIds])}>전체 선택</button>
         )}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
