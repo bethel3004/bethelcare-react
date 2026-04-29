@@ -19,19 +19,15 @@ export default function App() {
   const [role, setRole] = useState(
     sessionStorage.getItem('bethelcare_role') || 'admin'
   );
-  const isGuest = role === 'guest';
   const [page, setPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // 로컬 상태 (샘플 데이터로 초기화)
   const [patients,  setPatients]  = useState(SAMPLE_PATIENTS);
   const [bp,        setBp]        = useState(SAMPLE_BP);
-  // 구글 시트 혈당혈압 연동
   const [inbody,    setInbody]    = useState(SAMPLE_INBODY);
   const [consults,  setConsults]  = useState(SAMPLE_CONSULTS);
   const [groups,    setGroups]    = useState(SAMPLE_GROUPS);
 
-  // 구글 시트 연동
   const sheets = useSheets();
 
   useEffect(() => {
@@ -42,26 +38,26 @@ export default function App() {
   }, [sheets.patients]);
 
   useEffect(() => {
-    if (sheets.inbody && sheets.inbody.length > 0) {
-      setInbody(sheets.inbody);
-    }
+    if (sheets.inbody && sheets.inbody.length > 0) setInbody(sheets.inbody);
   }, [sheets.inbody]);
 
- useEffect(() => {
-  if (sheets.bp && sheets.bp.length > 0) {
-    setBp(sheets.bp);
-  }
-}, [sheets.bp]);
+  useEffect(() => {
+    if (sheets.consults && sheets.consults.length > 0) setConsults(sheets.consults);
+  }, [sheets.consults]);
 
-useEffect(() => {
-  if (sheets.consults && sheets.consults.length > 0) {
-    setConsults(sheets.consults);
-  }
-}, [sheets.consults]);
+  useEffect(() => {
+    if (sheets.bp && sheets.bp.length > 0) setBp(sheets.bp);
+  }, [sheets.bp]);
 
+  if (!auth) return <Login onLogin={(r) => {
+    sessionStorage.setItem('bethelcare_role', r || 'admin');
+    setRole(r || 'admin');
+    setAuth(true);
+  }} />;
 
-
+  const isGuest = role === 'guest';
   const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
+
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
     patients:  <Patients  db={db} />,
@@ -71,12 +67,6 @@ useEffect(() => {
     groups:    <Groups    db={db} />,
     stats:     <Stats     db={db} />,
   };
-
-  if (!auth) return <Login onLogin={(r) => {
-    sessionStorage.setItem('bethelcare_role', r || 'guest');
-    setRole(r || 'guest');
-    setAuth(true);
-  }} />;
 
   return (
     <div className="app-root">
