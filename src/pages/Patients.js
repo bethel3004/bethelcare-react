@@ -44,6 +44,7 @@ function AdmissionPicker({ value, onChange }) {
 export default function Patients({ db }) {
   const { patients, setPatients, isGuest } = db;
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('전체');
   const [tab, setTab] = useState('list');
   const [selected, setSelected] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
@@ -56,9 +57,12 @@ export default function Patients({ db }) {
     병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중'
   });
 
-  const filtered = patients.filter(p =>
-    !search || p.성명?.includes(search) || p.병명?.includes(search)
-  );
+  const filtered = patients.filter(p => {
+    if (statusFilter === '입소중' && p.상태 !== '입소중') return false;
+    if (statusFilter === '퇴소' && p.상태 !== '퇴소') return false;
+    if (search && !p.성명?.includes(search) && !p.병명?.includes(search)) return false;
+    return true;
+  });
 
   // 신장/체중 컬럼명 정규화
   // 입소기간 문자열 → 배열로 파싱
@@ -127,8 +131,18 @@ export default function Patients({ db }) {
           )}
         </div>
         {tab==='list' && (
-          <input className="form-input" style={{width:220}} placeholder="이름 또는 병명 검색..."
-            value={search} onChange={e=>setSearch(e.target.value)} />
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <div style={{display:'flex',gap:4}}>
+              {['전체','입소중','퇴소'].map(s=>(
+                <button key={s} onClick={()=>setStatusFilter(s)}
+                  className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}>
+                  {s}
+                </button>
+              ))}
+            </div>
+            <input className="form-input" style={{width:180}} placeholder="이름 또는 병명 검색..."
+              value={search} onChange={e=>setSearch(e.target.value)} />
+          </div>
         )}
       </div>
 
@@ -206,7 +220,8 @@ export default function Patients({ db }) {
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
-                    {!isGuest && <><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button></>}
+                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
+                    <button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button>
                   </div>
                 </div>
               )}
@@ -251,7 +266,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" {...ef('치료경력')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker value={editForm?.입소기간||''} onChange={v=>setEditForm({...editForm,입소기간:v})}/></div>
+              <div className="form-group"><label className="form-label">입소기간</label><input className="form-input" {...ef('입소기간')}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>
