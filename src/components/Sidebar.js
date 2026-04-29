@@ -30,7 +30,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       {/* 로고 */}
       <div onClick={()=>setPage('dashboard')} style={{ padding: open ? '24px 20px 16px' : '20px 0', textAlign: open ? 'left' : 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0, cursor:'pointer' }}>
-        <div style={{ fontSize: open ? '27px' : '33px', fontFamily: "'Jua', sans-serif", fontStyle: 'italic', fontWeight: 900, color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: open ? '27px' : '33px', fontFamily: "'Jua', sans-serif",  fontWeight: 900, color: '#C4AD8C', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
           {open ? '벧엘수양원' : '벧'}
         </div>
         {open && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
