@@ -252,7 +252,7 @@ body {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(92,122,95,0.1);
 }
-.form-textarea { resize: vertical; min-height: 80px; }
+.form-textarea { resize: vertical; min-height: 160px; }
 .form-actions {
   display: flex;
   gap: 8px;
