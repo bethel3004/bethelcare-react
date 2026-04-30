@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { appendToSheet, updateSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 // ══ 상담일지 ══
 export function Consult({ db }) {
@@ -252,7 +252,7 @@ export function Groups({ db }) {
                           {members.map(p=>p.성명).join(', ')}
                         </div>
                       )}
-                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>setGroups(groups.filter(x=>x.ID!==g.ID))}>삭제</button></div>}
+                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=>x.ID!==g.ID)); }}>삭제</button></div>}
                     </div>
                   </div>
                 );

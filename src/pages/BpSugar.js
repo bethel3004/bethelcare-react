@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
-import { appendToSheet, updateSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
   const { patients, bp, setBp, isGuest } = db;
@@ -37,7 +37,7 @@ export default function BpSugar({ db }) {
     const newId = String(Math.max(0,...bp.map(x=>parseInt(x.ID)||0))+1);
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
-    appendToSheet('혈당/혈압', newBp);
+    appendToSheet('혈당혈압', newBp);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
@@ -45,7 +45,7 @@ export default function BpSugar({ db }) {
   const handleEdit = (e) => {
     e.preventDefault();
     setBp(bp.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
-    if (editForm._rowIndex) updateSheet('혈당/혈압', editForm._rowIndex, editForm);
+    if (editForm._rowIndex) updateSheet('혈당혈압', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('list');
   };
 

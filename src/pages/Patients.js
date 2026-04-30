@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { appendToSheet, updateSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
@@ -106,7 +106,7 @@ export default function Patients({ db }) {
     if (!editForm.성명 || !editForm.병명) return alert('성명과 병명은 필수입니다.');
     const updatedForm = { ...editForm, 입소기간: formatAdmissions(admissions) };
     setPatients(patients.map(p => p.ID === editTarget.ID ? updatedForm : p));
-    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm);
+    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
   };
 
@@ -221,7 +221,7 @@ export default function Patients({ db }) {
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
                     <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
-                    <button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button>
+                    <button className="btn btn-danger btn-sm" onClick={()=>{ if(p._rowIndex) deleteFromSheet('입소자', p._rowIndex); setPatients(patients.filter(x=>x.ID!==p.ID)); setSelected(null); }}>🗑️ 삭제</button>
                   </div>
                 </div>
               )}
