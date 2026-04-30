@@ -60,7 +60,7 @@ export default function Dashboard({ db, setPage }) {
   const ibChanges = [];
   const pids = [...new Set(inbody.map(r => r.입소자ID))];
   pids.forEach(pid => {
-    const rows = inbody.filter(r => r.입소자ID === pid).sort((a,b) => a.날짜.localeCompare(b.날짜));
+    const rows = inbody.filter(r => r.입소자ID === pid).sort((a,b) => (a.날짜||'').localeCompare(b.날짜||''));
     if (rows.length >= 2) {
       const diff = parseInt(rows[rows.length-1].점수) - parseInt(rows[0].점수);
       ibChanges.push({ name: rows[0].성명, before: parseInt(rows[0].점수), after: parseInt(rows[rows.length-1].점수), diff });
