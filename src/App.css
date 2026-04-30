@@ -548,6 +548,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
     gap: 4px !important;
     overflow-x: auto !important;
     width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .tab {

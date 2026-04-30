@@ -100,7 +100,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
             flexShrink: 0, cursor: 'pointer',
           }}>
           <div style={{
-            fontSize: showLabel ? '2.6rem' : '1.4rem',
+            fontSize: showLabel ? '1.3rem' : '0.7rem',
             fontFamily: "'Jua', sans-serif",
             fontWeight: 900,
             color: '#C4AD8C',
