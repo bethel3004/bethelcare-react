@@ -10,43 +10,59 @@ const MENU = [
   { id:'stats',     icon:'◐', label:'통계·보고서' },
 ];
 
+function useBreakpoint() {
+  const getBreakpoint = () => {
+    if (window.innerWidth < 768) return 'mobile';
+    if (window.innerWidth < 1024) return 'tablet';
+    return 'desktop';
+  };
+  const [bp, setBp] = useState(getBreakpoint());
+  useEffect(() => {
+    const handler = () => setBp(getBreakpoint());
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return bp;
+}
+
 export default function Sidebar({ page, setPage, open, setOpen, db }) {
   const active = db.patients.filter(p => p.상태 === '입소중').length;
   const total  = db.patients.length;
   const role = db.role || 'admin';
   const roleName = role === 'admin' ? '관리자' : role === 'staff' ? 'STAFF' : '게스트';
   const roleColor = role === 'guest' ? '#8A6B4A' : role === 'staff' ? '#4A6B8A' : '#5C7A5F';
+  const bp = useBreakpoint();
 
-  // 모바일 감지
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // 모바일: 기본 닫힘, 태블릿: 항상 아이콘만, 데스크탑: open 상태 유지
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
+    if (bp === 'mobile') setOpen(false);
+    if (bp === 'tablet') setOpen(false);
+    if (bp === 'desktop') setOpen(true);
+  }, [bp]);
 
-  // 모바일에서는 기본 닫힘
-  useEffect(() => {
-    if (isMobile) setOpen(false);
-  }, [isMobile]);
+  const isMobile = bp === 'mobile';
+  const isTablet = bp === 'tablet';
+
+  // 사이드바 너비 결정
+  const sidebarWidth = isMobile ? '240px' : isTablet ? '64px' : (open ? '240px' : '64px');
+  const showLabel = isMobile ? true : isTablet ? false : open;
+  const transform = isMobile && !open ? 'translateX(-100%)' : 'translateX(0)';
 
   const handleMenuClick = (id) => {
     setPage(id);
-    if (isMobile) setOpen(false); // 모바일에서 메뉴 선택 후 자동 닫힘
+    if (isMobile) setOpen(false);
   };
-
-  // 모바일 오버레이 (사이드바 열렸을 때 배경 클릭하면 닫힘)
-  const overlay = isMobile && open ? (
-    <div onClick={() => setOpen(false)} style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
-      zIndex: 99,
-    }}/>
-  ) : null;
 
   return (
     <>
-      {overlay}
+      {/* 모바일 오버레이 */}
+      {isMobile && open && (
+        <div onClick={() => setOpen(false)} style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 99,
+        }}/>
+      )}
 
       {/* 모바일 햄버거 버튼 */}
       {isMobile && (
@@ -66,89 +82,92 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
 
       <aside style={{
         position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: isMobile ? '240px' : (open ? '240px' : '64px'),
+        width: sidebarWidth,
         background: '#4A7C6A',
         display: 'flex', flexDirection: 'column',
-        transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'transform 0.3s ease, width 0.3s ease',
         zIndex: 100,
         overflow: 'hidden',
-        transform: isMobile && !open ? 'translateX(-100%)' : 'translateX(0)',
+        transform,
       }}>
 
         {/* 로고 */}
-        <div onClick={()=>{setPage('dashboard'); if(isMobile) setOpen(false);}} style={{
-          padding: '24px 20px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
-          flexShrink: 0, cursor: 'pointer',
-          marginTop: isMobile ? 0 : 0,
-        }}>
+        <div onClick={() => { setPage('dashboard'); if (isMobile) setOpen(false); }}
+          style={{
+            padding: showLabel ? '24px 20px 16px' : '20px 0',
+            textAlign: showLabel ? 'left' : 'center',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            flexShrink: 0, cursor: 'pointer',
+          }}>
           <div style={{
-            fontSize: '2.6rem',
+            fontSize: showLabel ? '2.6rem' : '1.4rem',
             fontFamily: "'Jua', sans-serif",
             fontWeight: 900,
             color: '#C4AD8C',
-            letterSpacing: '-0.01em',
             lineHeight: 1.2,
           }}>
-            벧엘수양원
+            {showLabel ? '벧엘수양원' : '벧'}
           </div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>
+          {showLabel && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
         </div>
 
-        {/* 입소 현황 */}
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
-              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
-            <div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
-              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>전체</div>
+        {/* 입소 현황 - 라벨 있을 때만 */}
+        {showLabel && (
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#C4AD8C', lineHeight: 1 }}>{active}</div>
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>입소 중</div>
+              </div>
+              <div style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }} />
+              <div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{total}</div>
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>전체</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 메뉴 */}
         <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto' }}>
           {MENU.map(m => {
             const isActive = page === m.id;
             return (
-              <button key={m.id} onClick={() => handleMenuClick(m.id)} style={{
+              <button key={m.id} onClick={() => handleMenuClick(m.id)} title={m.label} style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                justifyContent: 'flex-start',
+                gap: showLabel ? '12px' : '0',
+                justifyContent: showLabel ? 'flex-start' : 'center',
                 width: '100%',
-                padding: '13px 20px',
+                padding: showLabel ? '13px 20px' : '15px 0',
                 background: isActive ? 'rgba(196,173,140,0.14)' : 'transparent',
                 border: 'none',
                 borderLeft: isActive ? '2px solid #C4AD8C' : '2px solid transparent',
                 color: isActive ? '#C4AD8C' : 'rgba(255,255,255,0.65)',
-                fontSize: '14px',
+                fontSize: showLabel ? '14px' : '18px',
                 fontWeight: isActive ? '600' : '400',
                 fontFamily: "'DM Sans', 'Noto Sans KR', sans-serif",
                 cursor: 'pointer',
                 transition: 'all 0.15s',
-                letterSpacing: '-0.01em',
                 textAlign: 'left',
                 whiteSpace: 'nowrap',
               }}>
-                <span style={{ fontSize: '15px' }}>{m.icon}</span>
-                <span>{m.label}</span>
+                <span>{m.icon}</span>
+                {showLabel && <span>{m.label}</span>}
               </button>
             );
           })}
         </nav>
 
         {/* 역할 배지 */}
-        <div style={{padding:'8px 20px 4px'}}>
-          <span style={{fontSize:'0.7rem',background:roleColor,color:'white',padding:'2px 10px',borderRadius:20,fontWeight:600}}>
-            {roleName}
-          </span>
-        </div>
+        {showLabel && (
+          <div style={{ padding: '8px 20px 4px' }}>
+            <span style={{ fontSize: '0.7rem', background: roleColor, color: 'white', padding: '2px 10px', borderRadius: 20, fontWeight: 600 }}>
+              {roleName}
+            </span>
+          </div>
+        )}
 
         {/* 로그아웃 */}
         <button onClick={() => {
@@ -164,16 +183,15 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           cursor: 'pointer',
           fontSize: '12px',
           fontFamily: "'DM Sans', sans-serif",
-          letterSpacing: '0.05em',
           transition: 'all 0.15s',
           flexShrink: 0,
           textAlign: 'center',
         }}>
-          로그아웃
+          {showLabel ? '로그아웃' : '↩'}
         </button>
 
-        {/* 토글 버튼 (데스크탑만) */}
-        {!isMobile && (
+        {/* 데스크탑 토글 버튼 */}
+        {!isMobile && !isTablet && (
           <button onClick={() => setOpen(!open)} style={{
             padding: '14px',
             background: 'rgba(255,255,255,0.03)',
