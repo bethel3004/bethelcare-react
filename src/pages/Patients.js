@@ -226,7 +226,7 @@ export default function Patients({ db }) {
                         </div>
                       )}
                       <div className="section-label">치료 경력</div>
-                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px'}}>{getTreatment(p)||'없음'}</div>
+                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{getTreatment(p)||'없음'}</div>
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
@@ -275,7 +275,7 @@ export default function Patients({ db }) {
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320}} {...ef('치료경력')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('치료경력')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker existingStr={editTarget?.입소기간||''} onChange={setAdmissions}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
@@ -321,7 +321,7 @@ export default function Patients({ db }) {
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" placeholder="고혈압 / 당뇨 등" {...f('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...f('상담자')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320}} placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}>
                 <label className="form-label">입소기간</label>
                 <AdmissionPicker existingStr={''} onChange={v=>setForm({...form,입소기간:v})}/>
