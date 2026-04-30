@@ -36,6 +36,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   // 모바일: 기본 닫힘, 태블릿: 항상 아이콘만, 데스크탑: open 상태 유지
   useEffect(() => {
     if (bp === 'mobile') setOpen(false);
+    if (bp === 'tablet') setOpen(true);
     if (bp === 'desktop') setOpen(true);
   }, [bp]);
 
