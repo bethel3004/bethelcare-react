@@ -113,5 +113,5 @@ export function useSheets() {
     return () => clearInterval(interval);
   }, []);
 
-  return { ...data, loading, error };
+  return { ...data, loading, error, reload: load };
 }

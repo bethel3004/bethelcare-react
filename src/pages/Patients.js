@@ -46,7 +46,7 @@ function AdmissionPicker({ existingStr, onChange }) {
 }
 
 export default function Patients({ db }) {
-  const { patients, setPatients, isGuest } = db;
+  const { patients, setPatients, isGuest, reloadSheets } = db;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
   const [tab, setTab] = useState('list');
@@ -105,6 +105,7 @@ export default function Patients({ db }) {
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
+    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setTab('list');
   };
 
@@ -115,9 +116,10 @@ export default function Patients({ db }) {
     const existing = (editTarget?.입소기간||'').trim();
     const combined = [existing, newPeriods].filter(Boolean).join('\n');
     const updatedForm = { ...editForm, 입소기간: combined };
-    setPatients(patients.map(p => p.ID === editTarget.ID ? updatedForm : p));
+    setPatients(patients.map(p => (p._rowIndex && p._rowIndex === editTarget._rowIndex) || (p.ID && p.ID === editTarget.ID) || (p.성명 === editTarget.성명 && p === editTarget) ? updatedForm : p));
     if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
+    setTimeout(() => reloadSheets && reloadSheets(), 1000);
   };
 
   const f = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) });
@@ -231,7 +233,7 @@ export default function Patients({ db }) {
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
                     <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
-                    <button className="btn btn-danger btn-sm" onClick={()=>{ if(p._rowIndex) deleteFromSheet('입소자', p._rowIndex); setPatients(patients.filter(x=>x.ID!==p.ID)); setSelected(null); }}>🗑️ 삭제</button>
+                    <button className="btn btn-danger btn-sm" onClick={()=>{ if(p._rowIndex) deleteFromSheet('입소자', p._rowIndex); setPatients(patients.filter(x=> x._rowIndex ? x._rowIndex !== p._rowIndex : (x.ID ? x.ID !== p.ID : x !== p))); setSelected(null); }}>🗑️ 삭제</button>
                   </div>
                 </div>
               )}

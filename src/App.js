@@ -46,6 +46,7 @@ export default function App() {
   const [groups,    setGroups]    = useState(SAMPLE_GROUPS);
 
   const sheets = useSheets();
+  const reloadSheets = sheets.reload;
 
   useEffect(() => {
     if (sheets.patients && sheets.patients.length > 0) {
@@ -80,7 +81,7 @@ export default function App() {
   }} />;
 
   const isGuest = role === 'guest';
-  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups };
+  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups, reloadSheets };
 
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,

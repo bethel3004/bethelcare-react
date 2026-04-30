@@ -4,7 +4,7 @@ import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 // ══ 상담일지 ══
 export function Consult({ db }) {
-  const { patients, consults, setConsults, isGuest } = db;
+  const { patients, consults, setConsults, isGuest, reloadSheets } = db;
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -24,7 +24,7 @@ export function Consult({ db }) {
 
   const handleEditConsult = (e) => {
     e.preventDefault();
-    setConsults(consults.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
+    setConsults(consults.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
     if (editForm._rowIndex) updateSheet('상담내역', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('list');
   };
@@ -149,7 +149,7 @@ const TYPE_CFG = {
 };
 
 export function Groups({ db }) {
-  const { patients, groups, setGroups, isGuest } = db;
+  const { patients, groups, setGroups, isGuest, reloadSheets } = db;
   const [tab, setTab] = useState('list');
   const [form, setForm] = useState({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
   const [selected, setSelected] = useState([]);
@@ -163,6 +163,7 @@ export function Groups({ db }) {
     const newGroup = { ...form, ID:newId, 멤버IDs: selected.join(',') };
     setGroups([...groups, newGroup]);
     appendToSheet('기수행사', newGroup);
+    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
     setSelected([]);
     setTab('list');
@@ -172,7 +173,7 @@ export function Groups({ db }) {
     e.preventDefault();
     if (!editGroup.그룹명) return alert('기수·행사명을 입력하세요.');
     const updatedGroup = { ...editGroup, 멤버IDs: editSelected.join(',') };
-    setGroups(groups.map(g => g.ID === editGroup.ID ? updatedGroup : g));
+    setGroups(groups.map(g => (g._rowIndex && g._rowIndex === editGroup._rowIndex) || (g.ID && g.ID === editGroup.ID) || g === editGroup ? updatedGroup : g));
     if (updatedGroup._rowIndex) updateSheet('기수행사', updatedGroup._rowIndex, updatedGroup);
     setEditGroup(null); setEditSelected([]); setTab('list');
   };
@@ -252,7 +253,7 @@ export function Groups({ db }) {
                           {members.map(p=>p.성명).join(', ')}
                         </div>
                       )}
-                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=>x.ID!==g.ID)); }}>삭제</button></div>}
+                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=> x._rowIndex ? x._rowIndex !== g._rowIndex : (x.ID ? x.ID !== g.ID : x !== g))); }}>삭제</button></div>}
                     </div>
                   </div>
                 );
