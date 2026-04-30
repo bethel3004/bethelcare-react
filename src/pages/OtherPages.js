@@ -75,7 +75,7 @@ export function Consult({ db }) {
                   <span style={{color:'var(--accent)',fontWeight:600,marginLeft:4}}>{r.성명}</span>
                 </div>
                 {(r.증세||r.변화) && (
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:8}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr',gap:12,marginTop:8}}>
                     {r.증세 && <div>
                       <div style={{fontSize:'0.7rem',fontWeight:700,color:'var(--amber)',marginBottom:4,letterSpacing:'0.04em'}}>증 세</div>
                       <div style={{fontSize:'0.8125rem',lineHeight:1.6}}>{r.증세}</div>
@@ -335,8 +335,19 @@ export function Groups({ db }) {
 }
 
 
+function useIsMobile() {
+  const [m, setM] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return m;
+}
+
 export function Stats({ db }) {
   const { patients, bp, inbody, isGuest } = db;
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [selPatient, setSelPatient] = useState('전체');
   const [bpSearch, setBpSearch] = useState('');
@@ -400,7 +411,7 @@ export function Stats({ db }) {
       <div className="page-header"><h1>통계·보고서</h1><p>입소자 건강 현황 종합 분석</p></div>
 
       {/* 기본 통계 */}
-      <div style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:16,marginBottom:16}}>
+      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1.6fr 1fr',gap:16,marginBottom:16}}>
         <div className="card">
           <div className="card-header"><span className="card-title">질환별 현황</span></div>
           <div className="card-body">
