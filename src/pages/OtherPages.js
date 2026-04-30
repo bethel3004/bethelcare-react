@@ -160,7 +160,9 @@ export function Groups({ db }) {
     e.preventDefault();
     if (!form.그룹명) return alert('기수·행사명을 입력하세요.');
     const newId = String(Math.max(0,...groups.map(x=>parseInt(x.ID)||0))+1);
-    setGroups([...groups, { ...form, ID:newId, 멤버IDs: selected.join(',') }]);
+    const newGroup = { ...form, ID:newId, 멤버IDs: selected.join(',') };
+    setGroups([...groups, newGroup]);
+    appendToSheet('기수행사', newGroup);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
     setSelected([]);
     setTab('list');
@@ -169,10 +171,9 @@ export function Groups({ db }) {
   const handleEditGroup = (e) => {
     e.preventDefault();
     if (!editGroup.그룹명) return alert('기수·행사명을 입력하세요.');
-    setGroups(groups.map(g => g.ID === editGroup.ID
-      ? { ...editGroup, 멤버IDs: editSelected.join(',') }
-      : g
-    ));
+    const updatedGroup = { ...editGroup, 멤버IDs: editSelected.join(',') };
+    setGroups(groups.map(g => g.ID === editGroup.ID ? updatedGroup : g));
+    if (updatedGroup._rowIndex) updateSheet('기수행사', updatedGroup._rowIndex, updatedGroup);
     setEditGroup(null); setEditSelected([]); setTab('list');
   };
 

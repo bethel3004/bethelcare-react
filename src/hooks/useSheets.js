@@ -72,7 +72,7 @@ function normalizeBp(row) {
 }
 
 export function useSheets() {
-  const [data, setData] = useState({ patients: null, inbody: null, consults: null, bp: null });
+  const [data, setData] = useState({ patients: null, inbody: null, consults: null, bp: null, groups: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -83,18 +83,20 @@ export function useSheets() {
       return;
     }
     try {
-      const [patients, inbody, consults, bp] = await Promise.all([
+      const [patients, inbody, consults, bp, groups] = await Promise.all([
         fetchSheet('입소자'),
         fetchSheet('인바디'),
         fetchSheet('상담내역'),
         fetchSheet('혈당혈압'),
+        fetchSheet('기수행사'),
       ]);
-      console.log('[Sheets] 로드 성공:', patients.length, '명, 혈당혈압:', bp.length, '건');
+      console.log('[Sheets] 로드 성공:', patients.length, '명, 혈당혈압:', bp.length, '건, 기수행사:', groups.length, '건');
       setData({
         patients: patients.map(normalizePatient),
         inbody,
         consults,
         bp: bp.map(normalizeBp),
+        groups,
       });
       setError(null);
     } catch (e) {

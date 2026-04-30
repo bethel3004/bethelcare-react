@@ -49,6 +49,13 @@ export default function App() {
     if (sheets.bp && sheets.bp.length > 0) setBp(sheets.bp);
   }, [sheets.bp]);
 
+  useEffect(() => {
+    if (sheets.groups && sheets.groups.length > 0) {
+      console.log('[App] 구글 시트 기수행사 데이터 적용:', sheets.groups.length, '건');
+      setGroups(sheets.groups);
+    }
+  }, [sheets.groups]);
+
   if (!auth) return <Login onLogin={(r) => {
     sessionStorage.setItem('bethelcare_role', r || 'admin');
     sessionStorage.setItem('bethelcare_auth', 'true');
