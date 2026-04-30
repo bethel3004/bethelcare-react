@@ -11,7 +11,7 @@ async function fetchSheet(sheetName) {
   const [headers, ...rows] = json.values || [];
   if (!headers) return [];
   return rows.map((row, i) =>
-    headers.reduce((obj, h, j) => ({ ...obj, [h.trim()]: (row[j] || '').trim() }), { _rowIndex: i + 2 })
+    headers.reduce((obj, h, j) => ({ ...obj, [h.trim()]: (row[j] || '').replace(/\\n/g, '\n').trim() }), { _rowIndex: i + 2 })
   );
 }
 

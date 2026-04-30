@@ -226,7 +226,7 @@ export default function Patients({ db }) {
                         </div>
                       )}
                       <div className="section-label">치료 경력</div>
-                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{getTreatment(p)||'없음'}</div>
+                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{(getTreatment(p)||'없음').replace(/ > /g,'\n> ')}</div>
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
