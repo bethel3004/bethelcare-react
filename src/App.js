@@ -50,7 +50,7 @@ export default function App() {
   }, [sheets.bp]);
 
   useEffect(() => {
-    if (sheets.groups && sheets.groups.length > 0) {
+    if (sheets.groups !== null && sheets.groups !== undefined) {
       console.log('[App] 구글 시트 기수행사 데이터 적용:', sheets.groups.length, '건');
       setGroups(sheets.groups);
     }
