@@ -433,3 +433,81 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
   .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
   .main-content.sidebar-open, .main-content.sidebar-closed { margin-left: 0; }
 }
+
+/* ── 모바일 콘텐츠 반응형 ── */
+@media (max-width: 767px) {
+
+  /* 카드 그리드 1열로 */
+  .form-grid-2,
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 통계 카드 1열 */
+  [style*="grid-template-columns: 1.6fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 테이블 스크롤 */
+  .table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 카드 패딩 축소 */
+  .card-body {
+    padding: 14px !important;
+  }
+
+  /* 리스트 아이템 줄바꿈 허용 */
+  .list-item {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* 페이지 헤더 */
+  .page-header h1 {
+    font-size: 1.8rem !important;
+  }
+
+  /* 탭 버튼 */
+  .tabs {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* 검색+필터 줄바꿈 */
+  .search-bar {
+    flex-wrap: wrap !important;
+  }
+
+  /* 기수행사 카드 그리드 1열 */
+  [style*="repeat(auto-fill,minmax(280px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 체크박스 그리드 2열로 축소 */
+  [style*="repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 통계 그래프 높이 축소 */
+  .recharts-wrapper {
+    font-size: 10px !important;
+  }
+
+  /* 버튼 크기 */
+  .btn {
+    font-size: 0.8rem !important;
+    padding: 6px 10px !important;
+  }
+
+  /* form-actions */
+  .form-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .form-actions .btn {
+    width: 100% !important;
+  }
+}
