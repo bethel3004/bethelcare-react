@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
-  const { patients, bp, setBp, isGuest } = db;
+  const { patients, bp, setBp, isGuest, reloadSheets } = db;
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -38,13 +38,14 @@ export default function BpSugar({ db }) {
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
     appendToSheet('혈당혈압', newBp);
+    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
 
   const handleEdit = (e) => {
     e.preventDefault();
-    setBp(bp.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
+    setBp(bp.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
     if (editForm._rowIndex) updateSheet('혈당혈압', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('list');
   };

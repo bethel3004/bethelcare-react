@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function Inbody({ db }) {
-  const { patients, inbody, setInbody, isGuest } = db;
+  const { patients, inbody, setInbody, isGuest, reloadSheets } = db;
   const [tab, setTab] = useState('compare');
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
@@ -56,7 +56,7 @@ export default function Inbody({ db }) {
 
   const handleEdit = (e) => {
     e.preventDefault();
-    setInbody(inbody.map(r => r.ID === editTarget.ID ? { ...editForm } : r));
+    setInbody(inbody.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
     if (editForm._rowIndex) updateSheet('인바디', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('compare');
   };
@@ -68,6 +68,7 @@ export default function Inbody({ db }) {
     const newId = String(Math.max(0, ...inbody.map(x => parseInt(x.ID) || 0)) + 1);
     const newIb = { ...form, ID: newId, 입소자ID: p?.ID || '' };
     setInbody([...inbody, newIb]);
+    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     appendToSheet('인바디', newIb);
     setTab('compare'); setSel(form.성명);
   };
