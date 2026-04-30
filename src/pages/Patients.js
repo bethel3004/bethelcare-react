@@ -155,9 +155,9 @@ export default function Patients({ db }) {
               <div className="list-item" style={{cursor:'pointer'}} onClick={()=>setSelected(selected?.ID===p.ID?null:p)}>
                 <div className="avatar" style={{background:AVATAR_COLORS[i%AVATAR_COLORS.length]}}>{p.성명?.[0]}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:600,fontSize:'0.9rem',display:'flex',alignItems:'center',gap:8}}>
-                    {p.성명}
-                    <span style={{fontSize:'0.75rem',fontWeight:400,color:'var(--text3)'}}>{p.나이}세 {p.성별} · {p.종교}</span>
+                  <div style={{fontWeight:600,fontSize:'0.9rem',display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                    <span style={{whiteSpace:'nowrap'}}>{p.성명}</span>
+                    <span style={{fontSize:'0.75rem',fontWeight:400,color:'var(--text3)',whiteSpace:'nowrap'}}>{p.나이}세 {p.성별} · {p.종교}</span>
                     {p.캠프장소 && <span className="badge badge-blue">{p.캠프장소}</span>}
                     <span className={`badge ${p.상태==='입소중'?'badge-green':'badge-gray'}`}>{p.상태||'퇴소'}</span>
                   </div>
@@ -173,7 +173,7 @@ export default function Patients({ db }) {
 
               {selected?.ID === p.ID && (
                 <div className="card-body" style={{borderTop:'1px solid var(--border2)'}}>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                  <div style={{display:'grid',gridTemplateColumns:'2fr 3fr',gap:20}}>
                     <div>
                       <div className="section-label">인적사항</div>
                       {[
@@ -188,8 +188,8 @@ export default function Patients({ db }) {
                         p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${p.보호자연락처||''}`],
                       ].filter(Boolean).map(([k,v]) => (
                         <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:'0.8125rem'}}>
-                          <span style={{color:'var(--text3)',width:80,flexShrink:0,whiteSpace:'nowrap'}}>{k}</span>
-                          <span style={{fontWeight:500}}>{v}</span>
+                          <span style={{color:'var(--text3)',width:90,flexShrink:0,whiteSpace:'nowrap',fontSize:'0.75rem'}}>{k}</span>
+                          <span style={{fontWeight:500,fontSize:'0.8rem'}}>{v}</span>
                         </div>
                       ))}
                     </div>
