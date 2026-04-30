@@ -21,8 +21,19 @@ function KpiCard({ label, value, unit, sub, color }) {
   );
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return isMobile;
+}
+
 export default function Dashboard({ db, setPage }) {
   const { patients, bp, inbody } = db;
+  const isMobile = useIsMobile();
   const active   = patients.filter(p => p.상태 === '입소중').length;
   const total    = patients.length;
   const warnBp   = bp.filter(r => parseInt(r.혈압수축기) >= 140).length;
@@ -49,7 +60,7 @@ export default function Dashboard({ db, setPage }) {
   const ibChanges = [];
   const pids = [...new Set(inbody.map(r => r.입소자ID))];
   pids.forEach(pid => {
-    const rows = inbody.filter(r => r.입소자ID === pid).sort((a,b) => (a?.날짜||"").localeCompare(b?.날짜||""));
+    const rows = inbody.filter(r => r.입소자ID === pid).sort((a,b) => a.날짜.localeCompare(b.날짜));
     if (rows.length >= 2) {
       const diff = parseInt(rows[rows.length-1].점수) - parseInt(rows[0].점수);
       ibChanges.push({ name: rows[0].성명, before: parseInt(rows[0].점수), after: parseInt(rows[rows.length-1].점수), diff });
@@ -71,8 +82,8 @@ export default function Dashboard({ db, setPage }) {
   return (
     <div>
       <div className="page-header">
-        <h1>오늘의 현황</h1>
-        <p>벧엘수양원 현황 한눈에 보기</p>
+        <h1>대시보드</h1>
+        <p>벧엘수양원 건강 현황 한눈에 보기</p>
       </div>
 
       <div className="kpi-grid">
@@ -82,7 +93,7 @@ export default function Dashboard({ db, setPage }) {
         <KpiCard label="혈당 이상 기록" value={warnBs} unit="건" color={warnBs > 0 ? '#C17A00' : '#1A6B4A'} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 16, marginBottom: 16 }}>
 
         {/* 입소자 목록 */}
         <div className="card">
@@ -90,7 +101,7 @@ export default function Dashboard({ db, setPage }) {
             <span className="card-title">입소자 목록</span>
             <button className="btn btn-ghost btn-sm" onClick={() => setPage('patients')}>전체 보기</button>
           </div>
-          {patients.map((p, i) => (
+          {patients.slice(0, isMobile ? 6 : patients.length).map((p, i) => (
             <div key={p.ID} className="list-item" onClick={() => setPage('patients')}>
               <Avatar name={p.성명} idx={i} />
               <div style={{ flex: 1, minWidth: 0 }}>
