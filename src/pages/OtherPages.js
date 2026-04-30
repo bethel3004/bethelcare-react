@@ -214,7 +214,7 @@ export function Groups({ db }) {
   return (
     <div>
       <div className="page-header"><h1>기수·행사 관리</h1><p>프로그램 기수별 입소자 분류</p></div>
-      <div style={{display:'flex',justifyContent:'space-between',marginBottom:20}}>
+      <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>}
