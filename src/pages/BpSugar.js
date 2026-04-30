@@ -2,19 +2,8 @@ import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
 import { appendToSheet, updateSheet } from '../utils/sheets';
 
-function useIsMobile() {
-  const [m, setM] = React.useState(window.innerWidth < 768);
-  React.useEffect(() => {
-    const h = () => setM(window.innerWidth < 768);
-    window.addEventListener('resize', h);
-    return () => window.removeEventListener('resize', h);
-  }, []);
-  return m;
-}
-
 export default function BpSugar({ db }) {
   const { patients, bp, setBp, isGuest } = db;
-  const isMobile = useIsMobile();
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
@@ -84,7 +73,7 @@ export default function BpSugar({ db }) {
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
-          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
               value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
             <select className="form-select" style={{width:140}} value={sel}

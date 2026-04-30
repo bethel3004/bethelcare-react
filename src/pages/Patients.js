@@ -41,19 +41,8 @@ function AdmissionPicker({ value, onChange }) {
   );
 }
 
-function useIsMobile() {
-  const [m, setM] = React.useState(window.innerWidth < 768);
-  React.useEffect(() => {
-    const h = () => setM(window.innerWidth < 768);
-    window.addEventListener('resize', h);
-    return () => window.removeEventListener('resize', h);
-  }, []);
-  return m;
-}
-
 export default function Patients({ db }) {
   const { patients, setPatients, isGuest } = db;
-  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
   const [tab, setTab] = useState('list');
@@ -184,7 +173,7 @@ export default function Patients({ db }) {
 
               {selected?.ID === p.ID && (
                 <div className="card-body" style={{borderTop:'1px solid var(--border2)'}}>
-                  <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
                     <div>
                       <div className="section-label">인적사항</div>
                       {[

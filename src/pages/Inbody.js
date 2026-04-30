@@ -1,19 +1,8 @@
 import React, { useState } from 'react';
 import { appendToSheet, updateSheet } from '../utils/sheets';
 
-function useIsMobile() {
-  const [m, setM] = React.useState(window.innerWidth < 768);
-  React.useEffect(() => {
-    const h = () => setM(window.innerWidth < 768);
-    window.addEventListener('resize', h);
-    return () => window.removeEventListener('resize', h);
-  }, []);
-  return m;
-}
-
 export default function Inbody({ db }) {
   const { patients, inbody, setInbody, isGuest } = db;
-  const isMobile = useIsMobile();
   const [tab, setTab] = useState('compare');
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
