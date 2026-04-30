@@ -198,7 +198,7 @@ export default function Inbody({ db }) {
                       {/* 권고사항 */}
                       {getAdvice(af) && (
                         <div style={{background:'var(--accent-bg)',borderRadius:10,padding:'12px 16px',fontSize:'0.8125rem',color:'var(--accent)',lineHeight:1.6}}>
-                          <b>💡 권고사항</b><br/>{getAdvice(af)}
+                          <b>💡 권고사항</b><br/><span style={{whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{getAdvice(af)}</span>
                         </div>
                       )}
                     </>
@@ -262,7 +262,7 @@ export default function Inbody({ db }) {
               <div className="form-group"><label className="form-label">체지방률 (%)</label><input type="number" step="0.1" className="form-input" {...ef('체지방률')}/></div>
               <div className="form-group"><label className="form-label">내장지방레벨</label><input type="number" className="form-input" {...ef('내장지방레벨')}/></div>
               <div className="form-group"><label className="form-label">복부비만율</label><input type="number" step="0.01" className="form-input" {...ef('복부비만율')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" {...ef('권고')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" rows={6} style={{minHeight:240,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('권고')}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('compare');}}>취소</button>
@@ -297,7 +297,7 @@ export default function Inbody({ db }) {
               <div className="form-group"><label className="form-label">체지방률 (%)</label><input type="number" step="0.1" className="form-input" {...f('체지방률')}/></div>
               <div className="form-group"><label className="form-label">내장지방레벨</label><input type="number" className="form-input" {...f('내장지방레벨')}/></div>
               <div className="form-group"><label className="form-label">복부비만율</label><input type="number" step="0.01" className="form-input" {...f('복부비만율')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" {...f('권고')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" rows={6} style={{minHeight:240,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...f('권고')}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>setTab('compare')}>취소</button>
