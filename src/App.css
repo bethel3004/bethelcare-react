@@ -29,7 +29,7 @@
   --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@300;400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -67,13 +67,13 @@ body {
 /* ═══ 페이지 헤더 ═══ */
 .page-header { margin-bottom: 30px; }
 .page-header h1 {
-  font-family: var(--font-serif);
-  font-size: 2.4rem;
-  font-weight: 300;
+  font-family: 'Nanum Gothic', 'Noto Sans KR', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
   color: var(--text);
   letter-spacing: -0.01em;
-  line-height: 1.1;
-  font-style: italic;
+  line-height: 1.2;
 }
 .page-header p {
   font-size: 0.825rem;
@@ -467,7 +467,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
   /* 페이지 헤더 */
   .page-header h1 {
-    font-size: 1.8rem !important;
+    font-size: 1.3rem !important;
   }
 
   /* 탭 버튼 */
@@ -525,7 +525,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
   }
 
   .page-header h1 {
-    font-size: 1.6rem !important;
+    font-size: 1.2rem !important;
   }
 
   .page-header p {
