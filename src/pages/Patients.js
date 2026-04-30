@@ -4,43 +4,42 @@ import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
 // 입소기간 달력 입력 컴포넌트
-function AdmissionPicker({ value, onChange }) {
-  // value가 배열이면 그대로, 문자열이면 파싱
-  const toList = (v) => {
-    if (Array.isArray(v)) return v.length ? v : [{ start:'', end:'' }];
-    if (!v) return [{ start:'', end:'' }];
-    const parsed = v.split(/[\n,/]/).map(s => {
-      const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
-      if (m) return { start: m[1], end: m[2] };
-      return { start: s.trim(), end: '' };
-    }).filter(a => a.start || a.end);
-    return parsed.length ? parsed : [{ start:'', end:'' }];
-  };
-  const [list, setList] = React.useState(() => toList(value));
+// existingStr: 기존 입소기간 문자열(읽기전용 표시용), onChange: 새 기간 배열 콜백
+function AdmissionPicker({ existingStr, onChange }) {
+  // 새로 추가할 행만 관리 (빈 행 1개로 시작)
+  const [newRows, setNewRows] = React.useState([{ start:'', end:'' }]);
 
-  // value가 외부에서 바뀌면 동기화
-  React.useEffect(() => { setList(toList(value)); }, [JSON.stringify(value)]);
+  const update = (rows) => { setNewRows(rows); onChange(rows); };
 
-  const update = (newList) => { setList(newList); onChange(newList); };
+  // 기존 입소기간 텍스트 표시
+  const existingLines = (existingStr||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
   return (
     <div>
-      {list.map((a, i) => (
+      {existingLines.length > 0 && (
+        <div style={{marginBottom:10,padding:'8px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.8rem',color:'var(--text2)'}}>
+          <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:4}}>기존 입소이력</div>
+          {existingLines.map((line,i) => (
+            <div key={i} style={{padding:'2px 0'}}>{line}</div>
+          ))}
+        </div>
+      )}
+      <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:6}}>새 입소기간 추가</div>
+      {newRows.map((a, i) => (
         <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
           <input type="date" className="form-input" value={a.start}
-            onChange={e=>{const n=[...list];n[i]={...n[i],start:e.target.value};update(n);}}/>
+            onChange={e=>{const n=[...newRows];n[i]={...n[i],start:e.target.value};update(n);}}/>
           <span style={{color:'var(--text3)',flexShrink:0,fontWeight:500}}>~</span>
           <input type="date" className="form-input" value={a.end}
-            onChange={e=>{const n=[...list];n[i]={...n[i],end:e.target.value};update(n);}}/>
-          {list.length > 1 && (
+            onChange={e=>{const n=[...newRows];n[i]={...n[i],end:e.target.value};update(n);}}/>
+          {newRows.length > 1 && (
             <button type="button" className="btn btn-danger btn-sm" style={{flexShrink:0}}
-              onClick={()=>update(list.filter((_,j)=>j!==i))}>✕</button>
+              onClick={()=>update(newRows.filter((_,j)=>j!==i))}>✕</button>
           )}
         </div>
       ))}
       <button type="button" className="btn btn-ghost btn-sm" style={{marginTop:2}}
-        onClick={()=>update([...list,{start:'',end:''}])}>
-        + 입소 기간 추가
+        onClick={()=>update([...newRows,{start:'',end:''}])}>
       </button>
     </div>
   );
@@ -112,7 +111,10 @@ export default function Patients({ db }) {
   const handleEdit = (e) => {
     e.preventDefault();
     if (!editForm.성명 || !editForm.병명) return alert('성명과 병명은 필수입니다.');
-    const updatedForm = { ...editForm, 입소기간: formatAdmissions(admissions) };
+    const newPeriods = admissions.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
+    const existing = (editTarget?.입소기간||'').trim();
+    const combined = [existing, newPeriods].filter(Boolean).join('\n');
+    const updatedForm = { ...editForm, 입소기간: combined };
     setPatients(patients.map(p => p.ID === editTarget.ID ? updatedForm : p));
     if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
@@ -274,7 +276,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" {...ef('치료경력')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker value={admissions} onChange={setAdmissions}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker existingStr={editTarget?.입소기간||''} onChange={setAdmissions}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>
@@ -322,7 +324,7 @@ export default function Patients({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}>
                 <label className="form-label">입소기간</label>
-                <AdmissionPicker value={form.입소기간} onChange={v=>setForm({...form,입소기간:v})}/>
+                <AdmissionPicker existingStr={''} onChange={v=>setForm({...form,입소기간:v})}/>
               </div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...f('상태')}><option>입소중</option><option>퇴소</option></select>
