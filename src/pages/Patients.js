@@ -120,7 +120,7 @@ export default function Patients({ db }) {
         <p>입소자 등록·조회·수정</p>
       </div>
 
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+      <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center', gap:10, marginBottom:20 }}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>신규 등록</button>}
