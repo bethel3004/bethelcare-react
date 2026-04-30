@@ -188,7 +188,7 @@ export default function Patients({ db }) {
                         p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${p.보호자연락처||''}`],
                       ].filter(Boolean).map(([k,v]) => (
                         <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:'0.8125rem'}}>
-                          <span style={{color:'var(--text3)',width:80,flexShrink:0}}>{k}</span>
+                          <span style={{color:'var(--text3)',width:80,flexShrink:0,whiteSpace:'nowrap'}}>{k}</span>
                           <span style={{fontWeight:500}}>{v}</span>
                         </div>
                       ))}
