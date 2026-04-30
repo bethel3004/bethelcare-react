@@ -103,8 +103,8 @@ export function Consult({ db }) {
               <div className="form-group"><label className="form-label">상담일</label><input type="date" className="form-input" {...ef('날짜')}/></div>
               <div className="form-group"><label className="form-label">상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...ef('비고')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200}} {...ef('증세')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200}} {...ef('변화')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('증세')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('변화')}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
@@ -126,8 +126,8 @@ export function Consult({ db }) {
               <div className="form-group"><label className="form-label">상담일</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">상담자</label><input className="form-input" {...f('상담자')}/></div>
               <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...f('비고')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200}} placeholder="현재 증세 및 호소 내용" {...f('증세')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200}} placeholder="긍정적 변화, 생활 권고 사항" {...f('변화')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="현재 증세 및 호소 내용" {...f('증세')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="긍정적 변화, 생활 권고 사항" {...f('변화')}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
