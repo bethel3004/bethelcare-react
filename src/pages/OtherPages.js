@@ -43,7 +43,7 @@ export function Consult({ db }) {
   return (
     <div>
       <div className="page-header"><h1>상담 일지</h1><p>날짜별 상담 기록 관리</p></div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+      <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:20}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>상담 기록 입력</button>}
