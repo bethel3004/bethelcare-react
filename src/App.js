@@ -19,7 +19,24 @@ export default function App() {
   const [role, setRole] = useState(
     sessionStorage.getItem('bethelcare_role') || 'admin'
   );
-  const [page, setPage] = useState('dashboard');
+  const getPageFromUrl = () => {
+    const hash = window.location.hash.replace('#', '');
+    const valid = ['dashboard','patients','bp_sugar','inbody','consult','groups','stats'];
+    return valid.includes(hash) ? hash : 'dashboard';
+  };
+  const [page, setPageState] = useState(getPageFromUrl);
+
+  // URL ↔ page 양방향 연동
+  const setPage = (p) => {
+    setPageState(p);
+    window.location.hash = p;
+  };
+
+  useEffect(() => {
+    const onPopState = () => setPageState(getPageFromUrl());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [patients,  setPatients]  = useState(SAMPLE_PATIENTS);
