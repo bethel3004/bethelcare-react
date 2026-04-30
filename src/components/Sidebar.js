@@ -36,7 +36,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   // 모바일: 기본 닫힘, 태블릿: 항상 아이콘만, 데스크탑: open 상태 유지
   useEffect(() => {
     if (bp === 'mobile') setOpen(false);
-    if (bp === 'tablet') setOpen(false);
     if (bp === 'desktop') setOpen(true);
   }, [bp]);
 
@@ -44,8 +43,8 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   const isTablet = bp === 'tablet';
 
   // 사이드바 너비 결정
-  const sidebarWidth = isMobile ? '240px' : isTablet ? '64px' : (open ? '240px' : '64px');
-  const showLabel = isMobile ? true : isTablet ? false : open;
+  const sidebarWidth = isMobile ? '200px' : (open ? '200px' : '64px');
+  const showLabel = isMobile ? true : open;
   const transform = isMobile && !open ? 'translateX(-100%)' : 'translateX(0)';
 
   const handleMenuClick = (id) => {
@@ -145,7 +144,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
                 border: 'none',
                 borderLeft: isActive ? '2px solid #C4AD8C' : '2px solid transparent',
                 color: isActive ? '#C4AD8C' : 'rgba(255,255,255,0.65)',
-                fontSize: showLabel ? '14px' : '18px',
+                fontSize: showLabel ? '13px' : '18px',
                 fontWeight: isActive ? '600' : '400',
                 fontFamily: "'DM Sans', 'Noto Sans KR', sans-serif",
                 cursor: 'pointer',
@@ -191,7 +190,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         </button>
 
         {/* 데스크탑 토글 버튼 */}
-        {!isMobile && !isTablet && (
+        {!isMobile && (
           <button onClick={() => setOpen(!open)} style={{
             padding: '14px',
             background: 'rgba(255,255,255,0.03)',
