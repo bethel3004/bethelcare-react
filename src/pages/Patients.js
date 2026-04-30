@@ -5,18 +5,23 @@ const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A705
 
 // 입소기간 달력 입력 컴포넌트
 function AdmissionPicker({ value, onChange }) {
-  const parse = (str) => {
-    if (!str) return [{ start: '', end: '' }];
-    return str.split(/[\n/]/).map(s => { s = s.trim();
+  // value가 배열이면 그대로, 문자열이면 파싱
+  const toList = (v) => {
+    if (Array.isArray(v)) return v.length ? v : [{ start:'', end:'' }];
+    if (!v) return [{ start:'', end:'' }];
+    const parsed = v.split(/[\n,/]/).map(s => {
       const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
       if (m) return { start: m[1], end: m[2] };
-      return { start: '', end: '' };
-    }).filter(a => a.start || a.end) || [{ start: '', end: '' }];
+      return { start: s.trim(), end: '' };
+    }).filter(a => a.start || a.end);
+    return parsed.length ? parsed : [{ start:'', end:'' }];
   };
-  const format = (arr) => arr.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
-  const [list, setList] = React.useState(() => parse(value) || [{ start:'', end:'' }]);
+  const [list, setList] = React.useState(() => toList(value));
 
-  const update = (newList) => { setList(newList); onChange(format(newList)); };
+  // value가 외부에서 바뀌면 동기화
+  React.useEffect(() => { setList(toList(value)); }, [JSON.stringify(value)]);
+
+  const update = (newList) => { setList(newList); onChange(newList); };
 
   return (
     <div>
@@ -91,7 +96,10 @@ export default function Patients({ db }) {
     e.preventDefault();
     if (!form.성명 || !form.병명) return alert('성명과 병명은 필수입니다.');
     const newId = String(Math.max(0, ...patients.map(p => parseInt(p.ID)||0)) + 1);
-    const newPatient = { ...form, ID: newId };
+    const 입소기간 = Array.isArray(form.입소기간)
+      ? form.입소기간.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n')
+      : form.입소기간;
+    const newPatient = { ...form, ID: newId, 입소기간 };
     setPatients([...patients, newPatient]);
     appendToSheet('입소자', newPatient);
     setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
