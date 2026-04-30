@@ -472,8 +472,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
   /* 탭 버튼 */
   .tabs {
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     gap: 4px !important;
+    overflow-x: auto !important;
+    width: 100% !important;
   }
 
   /* 검색+필터 줄바꿈 */
@@ -542,8 +544,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
   /* ── 탭 ── */
   .tabs {
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     gap: 4px !important;
+    overflow-x: auto !important;
+    width: 100% !important;
   }
 
   .tab {
