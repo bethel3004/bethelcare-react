@@ -116,12 +116,12 @@ export default function BpSugar({ db }) {
             </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>날짜</th><th>이름</th><th>혈당(mg/dL)</th><th>혈압(mmHg)</th><th>비고</th><th></th></tr></thead>
+                <thead><tr><th style={{whiteSpace:'nowrap'}}>날짜</th><th style={{whiteSpace:'nowrap'}}>이름</th><th>혈당(mg/dL)</th><th>혈압(mmHg)</th><th>비고</th><th></th></tr></thead>
                 <tbody>
                   {[...filtered].sort((a,b)=>(b?.날짜||'').localeCompare(a?.날짜||'')).map((r,i)=>(
                     <tr key={i}>
-                      <td style={{fontWeight:600}}>{r.날짜}</td>
-                      <td>{r.성명}</td>
+                      <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{r.날짜}</td>
+                      <td style={{whiteSpace:'nowrap'}}>{r.성명}</td>
                       <td>
                         {r.혈당 && <span className={bsColor(r.혈당)}>{r.혈당}</span>}
                         {parseInt(r.혈당)>=126 && <span className="badge badge-red" style={{fontSize:'0.65rem',marginLeft:4}}>주의</span>}
