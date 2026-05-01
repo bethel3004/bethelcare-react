@@ -156,13 +156,17 @@ export default function Patients({ db }) {
         </div>
         {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <div style={{display:'flex',gap:4}}>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
               {['전체','입소중','퇴소'].map(s=>(
                 <button key={s} onClick={()=>setStatusFilter(s)}
                   className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}>
                   {s}
                 </button>
               ))}
+              <select value={campFilter} onChange={e=>setCampFilter(e.target.value)} className="form-select" style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:100}}>
+                <option value="전체">캠프장소 전체</option>
+                {[...new Set(patients.map(p=>p.캠프장소).filter(Boolean))].sort().map(c=>(<option key={c} value={c}>{c}</option>))}
+              </select>
             </div>
             <input className="form-input" style={{width:180}} placeholder="이름 또는 병명 검색..."
               value={search} onChange={e=>setSearch(e.target.value)} />
