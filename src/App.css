@@ -1,5 +1,6 @@
 /* ═══ 전역 변수 & 리셋 ═══ */
 :root {
+  --detail-cols: 2fr 3fr;
   --bg:        #F5F2EE;
   --bg2:       #EDE9E3;
   --surface:   #FDFCFA;
@@ -18,7 +19,7 @@
   --blue:      #3D5F8A;
   --blue-bg:   #EBF0F7;
   --sidebar-bg:#2C2118;
-  --sidebar-w: 240px;
+  --sidebar-w: 200px;
   --sidebar-w-closed: 64px;
   --radius:    14px;
   --radius-sm: 9px;
@@ -29,7 +30,7 @@
   --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@300;400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -67,13 +68,19 @@ body {
 /* ═══ 페이지 헤더 ═══ */
 .page-header { margin-bottom: 30px; }
 .page-header h1 {
-  font-family: var(--font-serif);
-  font-size: 2.4rem;
-  font-weight: 300;
+  font-family: 'Nanum Gothic', 'Noto Sans KR', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
   color: var(--text);
   letter-spacing: -0.01em;
-  line-height: 1.1;
-  font-style: italic;
+  line-height: 1.2;
+}
+h1 {
+  font-family: 'Nanum Gothic', 'Noto Sans KR', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
 }
 .page-header p {
   font-size: 0.825rem;
@@ -252,7 +259,7 @@ body {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(92,122,95,0.1);
 }
-.form-textarea { resize: vertical; min-height: 80px; }
+.form-textarea { resize: vertical; min-height: 160px; }
 .form-actions {
   display: flex;
   gap: 8px;
@@ -436,6 +443,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
 /* ── 모바일 콘텐츠 반응형 ── */
 @media (max-width: 767px) {
+  :root { --detail-cols: 1fr; }
+  .patient-detail-wrap { grid-template-columns: 1fr !important; }
+
 
   /* 카드 그리드 1열로 */
   .form-grid-2,
@@ -467,7 +477,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
   /* 페이지 헤더 */
   .page-header h1 {
-    font-size: 1.8rem !important;
+    font-size: 1.3rem !important;
   }
 
   /* 탭 버튼 */
@@ -525,7 +535,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
   }
 
   .page-header h1 {
-    font-size: 1.6rem !important;
+    font-size: 1.2rem !important;
   }
 
   .page-header p {
@@ -691,4 +701,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
     padding: 24px 12px !important;
     font-size: 0.85rem !important;
   }
+}
+
+/* 입소자 상세 레이아웃 */
+.patient-detail-wrap {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 20px;
 }
