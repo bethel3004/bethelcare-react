@@ -1,3 +1,13 @@
+// 전화번호 포맷: 010-1234-5678
+function formatPhone(v) {
+  if (!v) return '';
+  const d = String(v).replace(/\D/g, '');
+  const n = d.startsWith('0') ? d : '0' + d;
+  if (n.length === 11) return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`;
+  if (n.length === 10) return `${n.slice(0,3)}-${n.slice(3,6)}-${n.slice(6)}`;
+  return n;
+}
+
 import React, { useState } from 'react';
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
@@ -196,8 +206,8 @@ export default function Patients({ db }) {
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
-                        ['연락처', p.본인연락처],
-                        p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${p.보호자연락처||''}`],
+                        ['연락처', formatPhone(p.본인연락처)],
+                        p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${formatPhone(p.보호자연락처)||''}`],
                         p.비고 && ['비고', p.비고],
                       ].filter(Boolean).map(([k,v]) => (
                         <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:'0.8125rem'}}>
