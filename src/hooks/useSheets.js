@@ -1,13 +1,3 @@
-function fixPhone(v) {
-  if (!v) return '';
-  const d = String(v).replace(/\D/g, '');
-  if (!d) return '';
-  const n = d.startsWith('0') ? d : '0' + d;
-  if (n.length === 11) return n.slice(0,3)+'-'+n.slice(3,7)+'-'+n.slice(7);
-  if (n.length === 10) return n.slice(0,3)+'-'+n.slice(3,6)+'-'+n.slice(6);
-  return n;
-}
-
 import { useState, useEffect } from 'react';
 
 const SHEET_ID = process.env.REACT_APP_SHEET_ID;
@@ -40,17 +30,33 @@ function normalizeDate(str) {
 
 function normalizeAdmissionPeriod(str) {
   if (!str) return '';
-  const lines = str.split(/[\n\/,]/).map(s=>s.trim()).filter(Boolean);
-  return lines.map(line => {
+  // \n으로만 분리 (날짜에 /가 들어갈 수 있으므로 /는 구분자 제외)
+  const lines = str.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  const seen = new Set();
+  const result = [];
+  for (const line of lines) {
     const parts = line.split(/\s*[~～]\s*/);
+    let normalized = line;
     if (parts.length >= 2) {
       const start = normalizeDate(parts[0].trim());
       const end   = normalizeDate(parts[parts.length-1].trim());
-      if (start && end) return `${start} ~ ${end}`;
-      if (start) return `${start} ~`;
+      if (start && end) normalized = `${start} ~ ${end}`;
+      else if (start) normalized = `${start} ~`;
     }
-    return line;
-  }).join('\n');
+    // 중복 제거
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      result.push(normalized);
+    }
+  }
+  return result.join('\n');
+}
+
+function fixPhone(v) {
+  if (!v) return '';
+  const d = String(v).replace(/\D/g, '');
+  if (!d) return '';
+  return d.startsWith('0') ? d : '0' + d;
 }
 
 function normalizePatient(row) {
@@ -61,9 +67,9 @@ function normalizePatient(row) {
     현재체중: row['현재체중'] || row['현재체중(kg)'] || '',
     혈압_입소시: row['혈압_입소시'] || row['혈압(입소시)'] || '',
     혈당_입소시: row['혈당_입소시'] || row['혈당(입소시)'] || '',
-    본인연락처: (() => { const v = String(fixPhone(row['본인연락처'] || row['본인 연락처'] || '')).replace(/\D/g,''); return v && !v.startsWith('0') ? '0'+v : v; })(),
+    본인연락처: (() => { const v = String(row['본인연락처'] || row['본인 연락처'] || '').replace(/\D/g,''); return v && !v.startsWith('0') ? '0'+v : v; })(),
     보호자이름: row['보호자이름'] || row['보호자 이름'] || '',
-    보호자연락처: (() => { const v = String(fixPhone(row['보호자연락처'] || row['보호자 연락처'] || '')).replace(/\D/g,''); return v && !v.startsWith('0') ? '0'+v : v; })(),
+    보호자연락처: (() => { const v = String(row['보호자연락처'] || row['보호자 연락처'] || '').replace(/\D/g,''); return v && !v.startsWith('0') ? '0'+v : v; })(),
     보호자관계: row['보호자관계'] || row['보호자 관계'] || '',
     입소기간: normalizeAdmissionPeriod(row['입소기간'] || row['입소 기간'] || ''),
   };
