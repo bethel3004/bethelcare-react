@@ -55,7 +55,7 @@ export default function Patients({ db }) {
   const [editForm, setEditForm] = useState(null);
   const [admissions, setAdmissions] = useState([{ start: '', end: '' }]);
   const [form, setForm] = useState({
-    캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
+    캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'',
     혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
     보호자이름:'', 보호자연락처:'', 보호자관계:'',
     병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중'
@@ -101,7 +101,7 @@ export default function Patients({ db }) {
     const newPatient = { ...form, ID: newId, 입소기간 };
     setPatients([...patients, newPatient]);
     appendToSheet('입소자', newPatient);
-    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
+    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'', 비고:'',
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
@@ -198,6 +198,7 @@ export default function Patients({ db }) {
                         ['주소', p.주소],
                         ['연락처', p.본인연락처],
                         p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${p.보호자연락처||''}`],
+                        p.비고 && ['비고', p.비고],
                       ].filter(Boolean).map(([k,v]) => (
                         <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:'0.8125rem'}}>
                           <span style={{color:'var(--text3)',width:90,flexShrink:0,whiteSpace:'nowrap',fontSize:'0.75rem'}}>{k}</span>
@@ -272,6 +273,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label">보호자 이름</label><input className="form-input" {...ef('보호자이름')}/></div>
               <div className="form-group"><label className="form-label">보호자 연락처</label><input className="form-input" {...ef('보호자연락처')}/></div>
               <div className="form-group"><label className="form-label">보호자 관계</label><input className="form-input" {...ef('보호자관계')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">비고</label><input className="form-input" placeholder="신청자/봉사자 구분 등" {...ef('비고')}/></div>
             </div>
             <div className="section-label">의료사항</div>
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
@@ -318,6 +320,7 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label">보호자 이름</label><input className="form-input" {...f('보호자이름')}/></div>
               <div className="form-group"><label className="form-label">보호자 연락처</label><input className="form-input" {...f('보호자연락처')}/></div>
               <div className="form-group"><label className="form-label">보호자 관계</label><input className="form-input" placeholder="자녀" {...f('보호자관계')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">비고</label><input className="form-input" placeholder="신청자/봉사자 구분 등" {...f('비고')}/></div>
             </div>
             <div className="section-label">의료사항</div>
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
