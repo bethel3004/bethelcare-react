@@ -59,6 +59,7 @@ export default function Patients({ db }) {
   const { patients, setPatients, isGuest, reloadSheets } = db;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
+  const [campFilter, setCampFilter] = useState('전체');
   const [tab, setTab] = useState('list');
   const [selected, setSelected] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
@@ -74,6 +75,7 @@ export default function Patients({ db }) {
   const filtered = patients.filter(p => {
     if (statusFilter === '입소중' && p.상태 !== '입소중') return false;
     if (statusFilter === '퇴소' && p.상태 !== '퇴소') return false;
+    if (campFilter !== '전체' && p.캠프장소 !== campFilter) return false;
     if (search && !p.성명?.includes(search) && !p.병명?.includes(search)) return false;
     return true;
   });
