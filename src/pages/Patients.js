@@ -1,72 +1,57 @@
-// 전화번호 포맷: 010-1234-5678
-function formatPhone(v) {
-  if (!v) return '';
-  const d = String(v).replace(/\D/g, '');
-  const n = d.startsWith('0') ? d : '0' + d;
-  if (n.length === 11) return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`;
-  if (n.length === 10) return `${n.slice(0,3)}-${n.slice(3,6)}-${n.slice(6)}`;
-  return n;
-}
-
 import React, { useState } from 'react';
-import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
 // 입소기간 달력 입력 컴포넌트
-// existingStr: 기존 입소기간 문자열(읽기전용 표시용), onChange: 새 기간 배열 콜백
-function AdmissionPicker({ existingStr, onChange }) {
-  // 새로 추가할 행만 관리 (빈 행 1개로 시작)
-  const [newRows, setNewRows] = React.useState([{ start:'', end:'' }]);
+function AdmissionPicker({ value, onChange }) {
+  const parse = (str) => {
+    if (!str) return [{ start: '', end: '' }];
+    return str.split(/[\n/]/).map(s => { s = s.trim();
+      const m = s.trim().match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
+      if (m) return { start: m[1], end: m[2] };
+      return { start: '', end: '' };
+    }).filter(a => a.start || a.end) || [{ start: '', end: '' }];
+  };
+  const format = (arr) => arr.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
+  const [list, setList] = React.useState(() => parse(value) || [{ start:'', end:'' }]);
 
-  const update = (rows) => { setNewRows(rows); onChange(rows); };
-
-  // 기존 입소기간 텍스트 표시
-  const existingLines = (existingStr||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const update = (newList) => { setList(newList); onChange(format(newList)); };
 
   return (
     <div>
-      {existingLines.length > 0 && (
-        <div style={{marginBottom:10,padding:'8px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.8rem',color:'var(--text2)'}}>
-          <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:4}}>기존 입소이력</div>
-          {existingLines.map((line,i) => (
-            <div key={i} style={{padding:'2px 0'}}>{line}</div>
-          ))}
-        </div>
-      )}
-      <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:6}}>새 입소기간 추가</div>
-      {newRows.map((a, i) => (
+      {list.map((a, i) => (
         <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
           <input type="date" className="form-input" value={a.start}
-            onChange={e=>{const n=[...newRows];n[i]={...n[i],start:e.target.value};update(n);}}/>
+            onChange={e=>{const n=[...list];n[i]={...n[i],start:e.target.value};update(n);}}/>
           <span style={{color:'var(--text3)',flexShrink:0,fontWeight:500}}>~</span>
           <input type="date" className="form-input" value={a.end}
-            onChange={e=>{const n=[...newRows];n[i]={...n[i],end:e.target.value};update(n);}}/>
-          {newRows.length > 1 && (
+            onChange={e=>{const n=[...list];n[i]={...n[i],end:e.target.value};update(n);}}/>
+          {list.length > 1 && (
             <button type="button" className="btn btn-danger btn-sm" style={{flexShrink:0}}
-              onClick={()=>update(newRows.filter((_,j)=>j!==i))}>✕</button>
+              onClick={()=>update(list.filter((_,j)=>j!==i))}>✕</button>
           )}
         </div>
       ))}
       <button type="button" className="btn btn-ghost btn-sm" style={{marginTop:2}}
-        onClick={()=>update([...newRows,{start:'',end:''}])}>
+        onClick={()=>update([...list,{start:'',end:''}])}>
+        + 입소 기간 추가
       </button>
     </div>
   );
 }
 
 export default function Patients({ db }) {
-  const { patients, setPatients, isGuest, reloadSheets } = db;
+  const { patients, setPatients, isGuest } = db;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('전체');
-  const [campFilter, setCampFilter] = useState('전체');
   const [tab, setTab] = useState('list');
   const [selected, setSelected] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [admissions, setAdmissions] = useState([{ start: '', end: '' }]);
   const [form, setForm] = useState({
-    캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'',
+    캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
     혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
     보호자이름:'', 보호자연락처:'', 보호자관계:'',
     병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중'
@@ -75,7 +60,6 @@ export default function Patients({ db }) {
   const filtered = patients.filter(p => {
     if (statusFilter === '입소중' && p.상태 !== '입소중') return false;
     if (statusFilter === '퇴소' && p.상태 !== '퇴소') return false;
-    if (campFilter !== '전체' && p.캠프장소 !== campFilter) return false;
     if (search && !p.성명?.includes(search) && !p.병명?.includes(search)) return false;
     return true;
   });
@@ -107,31 +91,23 @@ export default function Patients({ db }) {
     e.preventDefault();
     if (!form.성명 || !form.병명) return alert('성명과 병명은 필수입니다.');
     const newId = String(Math.max(0, ...patients.map(p => parseInt(p.ID)||0)) + 1);
-    const 입소기간 = Array.isArray(form.입소기간)
-      ? form.입소기간.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n')
-      : form.입소기간;
-    const newPatient = { ...form, ID: newId, 입소기간 };
+    const newPatient = { ...form, ID: newId };
     setPatients([...patients, newPatient]);
     appendToSheet('입소자', newPatient);
-    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'', 비고:'',
+    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'',
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
-    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setTab('list');
   };
 
   const handleEdit = (e) => {
     e.preventDefault();
     if (!editForm.성명 || !editForm.병명) return alert('성명과 병명은 필수입니다.');
-    const newPeriods = admissions.filter(a=>a.start||a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
-    const existing = (editTarget?.입소기간||'').trim();
-    const combined = [existing, newPeriods].filter(Boolean).join('\n');
-    const updatedForm = { ...editForm, 입소기간: combined };
-    setPatients(patients.map(p => (p._rowIndex && p._rowIndex === editTarget._rowIndex) || (p.ID && p.ID === editTarget.ID) || (p.성명 === editTarget.성명 && p === editTarget) ? updatedForm : p));
-    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
+    const updatedForm = { ...editForm, 입소기간: formatAdmissions(admissions) };
+    setPatients(patients.map(p => p.ID === editTarget.ID ? updatedForm : p));
+    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
-    setTimeout(() => reloadSheets && reloadSheets(), 1000);
   };
 
   const f = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) });
@@ -156,17 +132,13 @@ export default function Patients({ db }) {
         </div>
         {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
+            <div style={{display:'flex',gap:4}}>
               {['전체','입소중','퇴소'].map(s=>(
                 <button key={s} onClick={()=>setStatusFilter(s)}
                   className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}>
                   {s}
                 </button>
               ))}
-              <select value={campFilter} onChange={e=>setCampFilter(e.target.value)} className="form-select" style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:100}}>
-                <option value="전체">캠프장소 전체</option>
-                {[...new Set(patients.map(p=>p.캠프장소).filter(Boolean))].sort().map(c=>(<option key={c} value={c}>{c}</option>))}
-              </select>
             </div>
             <input className="form-input" style={{width:180}} placeholder="이름 또는 병명 검색..."
               value={search} onChange={e=>setSearch(e.target.value)} />
@@ -183,9 +155,9 @@ export default function Patients({ db }) {
               <div className="list-item" style={{cursor:'pointer'}} onClick={()=>setSelected(selected?.ID===p.ID?null:p)}>
                 <div className="avatar" style={{background:AVATAR_COLORS[i%AVATAR_COLORS.length]}}>{p.성명?.[0]}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:600,fontSize:'0.9rem',display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-                    <span style={{whiteSpace:'nowrap'}}>{p.성명}</span>
-                    <span style={{fontSize:'0.75rem',fontWeight:400,color:'var(--text3)',whiteSpace:'nowrap'}}>{p.나이}세 {p.성별} · {p.종교}</span>
+                  <div style={{fontWeight:600,fontSize:'0.9rem',display:'flex',alignItems:'center',gap:8}}>
+                    {p.성명}
+                    <span style={{fontSize:'0.75rem',fontWeight:400,color:'var(--text3)'}}>{p.나이}세 {p.성별} · {p.종교}</span>
                     {p.캠프장소 && <span className="badge badge-blue">{p.캠프장소}</span>}
                     <span className={`badge ${p.상태==='입소중'?'badge-green':'badge-gray'}`}>{p.상태||'퇴소'}</span>
                   </div>
@@ -201,7 +173,7 @@ export default function Patients({ db }) {
 
               {selected?.ID === p.ID && (
                 <div className="card-body" style={{borderTop:'1px solid var(--border2)'}}>
-                  <div style={{display:'grid',gridTemplateColumns:'2fr 3fr',gap:20}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
                     <div>
                       <div className="section-label">인적사항</div>
                       {[
@@ -212,13 +184,12 @@ export default function Patients({ db }) {
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
-                        ['연락처', formatPhone(p.본인연락처)],
-                        p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${formatPhone(p.보호자연락처)||''}`],
-                        p.비고 && ['비고', p.비고],
+                        ['연락처', p.본인연락처],
+                        p.보호자이름 && ['보호자', `${p.보호자이름} (${p.보호자관계||''}) ${p.보호자연락처||''}`],
                       ].filter(Boolean).map(([k,v]) => (
                         <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:'0.8125rem'}}>
-                          <span style={{color:'var(--text3)',width:90,flexShrink:0,whiteSpace:'nowrap',fontSize:'0.75rem'}}>{k}</span>
-                          <span style={{fontWeight:500,fontSize:'0.8rem'}}>{v}</span>
+                          <span style={{color:'var(--text3)',width:80,flexShrink:0}}>{k}</span>
+                          <span style={{fontWeight:500}}>{v}</span>
                         </div>
                       ))}
                     </div>
@@ -245,12 +216,12 @@ export default function Patients({ db }) {
                         </div>
                       )}
                       <div className="section-label">치료 경력</div>
-                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{(getTreatment(p)||'없음').replace(/ > /g,'\n> ')}</div>
+                      <div style={{fontSize:'0.8rem',color:'var(--text2)',lineHeight:1.6,background:'var(--bg)',borderRadius:8,padding:'10px 12px'}}>{getTreatment(p)||'없음'}</div>
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
                     <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
-                    <button className="btn btn-danger btn-sm" onClick={()=>{ if(p._rowIndex) deleteFromSheet('입소자', p._rowIndex); setPatients(patients.filter(x=> x._rowIndex ? x._rowIndex !== p._rowIndex : (x.ID ? x.ID !== p.ID : x !== p))); setSelected(null); }}>🗑️ 삭제</button>
+                    <button className="btn btn-danger btn-sm" onClick={()=>{setPatients(patients.filter(x=>x.ID!==p.ID));setSelected(null);}}>🗑️ 삭제</button>
                   </div>
                 </div>
               )}
@@ -289,14 +260,13 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label">보호자 이름</label><input className="form-input" {...ef('보호자이름')}/></div>
               <div className="form-group"><label className="form-label">보호자 연락처</label><input className="form-input" {...ef('보호자연락처')}/></div>
               <div className="form-group"><label className="form-label">보호자 관계</label><input className="form-input" {...ef('보호자관계')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">비고</label><input className="form-input" placeholder="신청자/봉사자 구분 등" {...ef('비고')}/></div>
             </div>
             <div className="section-label">의료사항</div>
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" {...ef('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...ef('상담자')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('치료경력')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">입소기간</label><AdmissionPicker existingStr={editTarget?.입소기간||''} onChange={setAdmissions}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" {...ef('치료경력')}/></div>
+              <div className="form-group"><label className="form-label">입소기간</label><input className="form-input" {...ef('입소기간')}/></div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...ef('상태')}><option>입소중</option><option>퇴소</option></select>
               </div>
@@ -336,16 +306,15 @@ export default function Patients({ db }) {
               <div className="form-group"><label className="form-label">보호자 이름</label><input className="form-input" {...f('보호자이름')}/></div>
               <div className="form-group"><label className="form-label">보호자 연락처</label><input className="form-input" {...f('보호자연락처')}/></div>
               <div className="form-group"><label className="form-label">보호자 관계</label><input className="form-input" placeholder="자녀" {...f('보호자관계')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">비고</label><input className="form-input" placeholder="신청자/봉사자 구분 등" {...f('비고')}/></div>
             </div>
             <div className="section-label">의료사항</div>
             <div className="form-grid form-grid-2" style={{marginBottom:16}}>
               <div className="form-group"><label className="form-label required">주요 병명</label><input className="form-input" placeholder="고혈압 / 당뇨 등" {...f('병명')}/></div>
               <div className="form-group"><label className="form-label">담당 상담자</label><input className="form-input" {...f('상담자')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">치료 경력</label><textarea className="form-textarea" placeholder="수술력, 복약이력 등" {...f('치료경력')}/></div>
               <div className="form-group" style={{gridColumn:'1/-1'}}>
                 <label className="form-label">입소기간</label>
-                <AdmissionPicker existingStr={''} onChange={v=>setForm({...form,입소기간:v})}/>
+                <AdmissionPicker value={form.입소기간} onChange={v=>setForm({...form,입소기간:v})}/>
               </div>
               <div className="form-group"><label className="form-label">상태</label>
                 <select className="form-select" {...f('상태')}><option>입소중</option><option>퇴소</option></select>
