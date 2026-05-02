@@ -127,7 +127,8 @@ export default function Patients({ db }) {
     const existing = (editTarget?.입소기간||'').trim();
     const combined = [existing, newPeriods].filter(Boolean).join('\n');
     const updatedForm = { ...editForm, 입소기간: combined };
-    setPatients(patients.map(p => (p._rowIndex && p._rowIndex === editTarget._rowIndex) || (p.ID && p.ID === editTarget.ID) || (p.성명 === editTarget.성명 && p === editTarget) ? updatedForm : p));
+    const idx = patients.indexOf(editTarget);
+    setPatients(patients.map((p, i) => i === idx ? updatedForm : p));
     if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
   };
