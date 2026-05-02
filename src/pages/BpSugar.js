@@ -39,7 +39,6 @@ export default function BpSugar({ db }) {
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
     appendToSheet('혈당혈압', newBp);
-    setTimeout(() => reloadSheets && reloadSheets(), 4000);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
