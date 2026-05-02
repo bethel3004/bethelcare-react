@@ -10,6 +10,7 @@ export default function BpSugar({ db }) {
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
+  const [nameSearch, setNameSearch] = useState('');
 
   const getName = r => r.성명 || '';
   const filtered = bp.filter(r => {
@@ -38,6 +39,7 @@ export default function BpSugar({ db }) {
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
     appendToSheet('혈당혈압', newBp);
+    setTimeout(() => reloadSheets && reloadSheets(), 4000);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
     setTab('list');
   };
@@ -73,15 +75,23 @@ export default function BpSugar({ db }) {
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
-              value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
-            <select className="form-select" style={{width:140}} value={sel}
-              onChange={e=>{setSel(e.target.value);setSearch('');}}>
-              <option value="전체">전체</option>
-              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-            </select>
-            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input className="form-input" style={{flex:1,minWidth:120}} placeholder="🔍 이름 검색..."
+                value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
+              {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+            </div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+              <button className={sel==='전체'?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                onClick={()=>{setSel('전체');setSearch('');}}>전체</button>
+              {[...new Set(patients.map(p=>p.성명).filter(Boolean))].sort().map(name=>(
+                <button key={name}
+                  className={sel===name?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                  onClick={()=>{setSel(name);setSearch('');}}>
+                  {name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -172,11 +182,19 @@ export default function BpSugar({ db }) {
           <div className="card-header"><span className="card-title">혈당·혈압 기록 입력</span></div>
           <form className="card-body" onSubmit={handleAdd}>
             <div className="form-grid form-grid-2">
-              <div className="form-group"><label className="form-label required">입소자</label>
-                <select className="form-select" value={form.성명} onChange={e=>setForm({...form,성명:e.target.value})}>
-                  <option value="">선택</option>
-                  {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-                </select>
+              <div className="form-group" style={{gridColumn:'1/-1'}}>
+                <label className="form-label required">입소자 {form.성명 && <span style={{color:'var(--accent)',fontWeight:700}}>— {form.성명} 선택됨</span>}</label>
+                <input className="form-input" style={{marginBottom:8}} placeholder="🔍 이름 검색..."
+                  value={nameSearch} onChange={e=>setNameSearch(e.target.value)}/>
+                <div style={{display:'flex',flexWrap:'wrap',gap:4,maxHeight:120,overflowY:'auto'}}>
+                  {patients.filter(p=>!nameSearch||p.성명.includes(nameSearch)).map(p=>(
+                    <button key={p.성명} type="button"
+                      className={form.성명===p.성명?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                      onClick={()=>{setForm({...form,성명:p.성명});setNameSearch('');}}>
+                      {p.성명}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
