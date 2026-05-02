@@ -163,7 +163,6 @@ export function Groups({ db }) {
     const newGroup = { ...form, ID:newId, 멤버IDs: selected.join(',') };
     setGroups([...groups, newGroup]);
     appendToSheet('기수행사', newGroup);
-    setTimeout(() => reloadSheets && reloadSheets(), 4000);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
     setSelected([]);
     setTab('list');

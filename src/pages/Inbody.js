@@ -68,7 +68,6 @@ export default function Inbody({ db }) {
     const newId = String(Math.max(0, ...inbody.map(x => parseInt(x.ID) || 0)) + 1);
     const newIb = { ...form, ID: newId, 입소자ID: p?.ID || '' };
     setInbody([...inbody, newIb]);
-    setTimeout(() => reloadSheets && reloadSheets(), 4000);
     appendToSheet('인바디', newIb);
     setTab('compare'); setSel(form.성명);
   };
