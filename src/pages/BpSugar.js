@@ -95,18 +95,7 @@ export default function BpSugar({ db }) {
             {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
           </div>
         )}
-        {tab==='add' && (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
-              value={addSearch} onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''});}}/>
-            <select className="form-select" style={{width:140}} value={form.성명}
-              onChange={e=>setForm({...form,성명:e.target.value})}>
-              <option value="">선택</option>
-              {(addSearch ? patients.filter(p=>p.성명.includes(addSearch)) : patients).map(p=><option key={p.ID}>{p.성명}</option>)}
-            </select>
-            {addSearch && <button className="btn btn-ghost btn-sm" onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>}
-          </div>
-        )}
+
       </div>
 
       {/* 기록 조회 */}
@@ -197,9 +186,14 @@ export default function BpSugar({ db }) {
             <div className="form-grid form-grid-2">
               <div className="form-group">
                 <label className="form-label required">입소자</label>
-                <div style={{padding:'8px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.875rem',fontWeight:600,color:form.성명?'var(--accent)':'var(--text3)'}}>
-                  {form.성명 ? '✓ ' + form.성명 : '위에서 이름 검색 후 선택하세요'}
-                </div>
+                <input className="form-input" placeholder="🔍 이름 검색..." style={{marginBottom:6}}
+                  value={addSearch} onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''});}}/>
+                <select className="form-select" value={form.성명}
+                  onChange={e=>setForm({...form,성명:e.target.value})}>
+                  <option value="">선택</option>
+                  {(addSearch ? patients.filter(p=>p.성명.includes(addSearch)) : patients).map(p=><option key={p.ID}>{p.성명}</option>)}
+                </select>
+                {form.성명 && <div style={{marginTop:4,fontSize:'0.8rem',color:'var(--accent)',fontWeight:600}}>✓ {form.성명} 선택됨</div>}
               </div>
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
