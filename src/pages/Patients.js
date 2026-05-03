@@ -113,11 +113,10 @@ export default function Patients({ db }) {
     const newPatient = { ...form, ID: newId, 입소기간 };
     setPatients([...patients, newPatient]);
     appendToSheet('입소자', newPatient);
-    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'', 비고:'',
+    setForm({ 캠프장소:'', 성명:'', 생년월일:'', 나이:'', 성별:'여', 종교:'', 신장:'', 현재체중:'', 비고:'',
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
-    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setTab('list');
   };
 
@@ -128,10 +127,15 @@ export default function Patients({ db }) {
     const existing = (editTarget?.입소기간||'').trim();
     const combined = [existing, newPeriods].filter(Boolean).join('\n');
     const updatedForm = { ...editForm, 입소기간: combined };
-    setPatients(patients.map(p => (p._rowIndex && p._rowIndex === editTarget._rowIndex) || (p.ID && p.ID === editTarget.ID) || (p.성명 === editTarget.성명 && p === editTarget) ? updatedForm : p));
-    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm); else appendToSheet('입소자', updatedForm);
+    // ID 또는 _rowIndex 기반으로만 매칭 (객체 참조 비교 제거)
+    setPatients(prev => prev.map(p => {
+      if (editTarget._rowIndex && p._rowIndex && p._rowIndex === editTarget._rowIndex) return updatedForm;
+      if (editTarget.ID && p.ID && p.ID === editTarget.ID) return updatedForm;
+      return p;
+    }));
+    // 구글 시트 쓰기 (로컬 상태는 이미 반영 — reloadSheets 호출 안 함)
+    if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm);
     setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
-    setTimeout(() => reloadSheets && reloadSheets(), 1000);
   };
 
   const f = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) });
