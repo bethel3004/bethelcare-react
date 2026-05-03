@@ -83,7 +83,7 @@ export default function BpSugar({ db }) {
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
-        {tab==='list' || tab==='add') && (
+        {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
               value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
@@ -110,7 +110,7 @@ export default function BpSugar({ db }) {
       </div>
 
       {/* 기록 조회 */}
-      {tab==='list') tab==='list' || tab==='add') && (tab==='list' || tab==='add') && ( (
+      {tab==='list' && (
         <>
           {chartData.length > 1 && (
             <div className="card" style={{marginBottom:16}}>
