@@ -48,29 +48,43 @@ export default function App() {
   const sheets = useSheets();
   const reloadSheets = sheets.reload;
 
+  // 구글 시트 데이터는 최초 1회만 적용 (이후 자동 갱신이 로컬 편집을 덮어쓰지 않도록)
+  const initialLoadDone = React.useRef({ patients: false, inbody: false, consults: false, bp: false, groups: false });
+
   useEffect(() => {
-    if (sheets.patients && sheets.patients.length > 0) {
+    if (!initialLoadDone.current.patients && sheets.patients && sheets.patients.length > 0) {
       console.log('[App] 구글 시트 입소자 데이터 적용:', sheets.patients.length, '명');
       setPatients(sheets.patients);
+      initialLoadDone.current.patients = true;
     }
   }, [sheets.patients]);
 
   useEffect(() => {
-    if (sheets.inbody && sheets.inbody.length > 0) setInbody(sheets.inbody);
+    if (!initialLoadDone.current.inbody && sheets.inbody && sheets.inbody.length > 0) {
+      setInbody(sheets.inbody);
+      initialLoadDone.current.inbody = true;
+    }
   }, [sheets.inbody]);
 
   useEffect(() => {
-    if (sheets.consults && sheets.consults.length > 0) setConsults(sheets.consults);
+    if (!initialLoadDone.current.consults && sheets.consults && sheets.consults.length > 0) {
+      setConsults(sheets.consults);
+      initialLoadDone.current.consults = true;
+    }
   }, [sheets.consults]);
 
   useEffect(() => {
-    if (sheets.bp && sheets.bp.length > 0) setBp(sheets.bp);
+    if (!initialLoadDone.current.bp && sheets.bp && sheets.bp.length > 0) {
+      setBp(sheets.bp);
+      initialLoadDone.current.bp = true;
+    }
   }, [sheets.bp]);
 
   useEffect(() => {
-    if (sheets.groups !== null && sheets.groups !== undefined) {
+    if (!initialLoadDone.current.groups && sheets.groups !== null && sheets.groups !== undefined) {
       console.log('[App] 구글 시트 기수행사 데이터 적용:', sheets.groups.length, '건');
       setGroups(sheets.groups);
+      initialLoadDone.current.groups = true;
     }
   }, [sheets.groups]);
 
