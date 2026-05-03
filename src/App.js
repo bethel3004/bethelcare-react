@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -26,6 +26,7 @@ export default function App() {
   };
   const [page, setPageState] = useState(getPageFromUrl);
 
+  // URL ↔ page 양방향 연동
   const setPage = (p) => {
     setPageState(p);
     window.location.hash = p;
@@ -36,7 +37,6 @@ export default function App() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
-
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [patients,  setPatients]  = useState(SAMPLE_PATIENTS);
@@ -45,44 +45,31 @@ export default function App() {
   const [consults,  setConsults]  = useState(SAMPLE_CONSULTS);
   const [groups,    setGroups]    = useState(SAMPLE_GROUPS);
 
-  const sheetsInitialized = useRef({
-    patients: false, bp: false, inbody: false, consults: false, groups: false,
-  });
-
   const sheets = useSheets();
   const reloadSheets = sheets.reload;
 
   useEffect(() => {
-    if (!sheetsInitialized.current.patients && sheets.patients && sheets.patients.length > 0) {
-      sheetsInitialized.current.patients = true;
+    if (sheets.patients && sheets.patients.length > 0) {
+      console.log('[App] 구글 시트 입소자 데이터 적용:', sheets.patients.length, '명');
       setPatients(sheets.patients);
     }
   }, [sheets.patients]);
 
   useEffect(() => {
-    if (!sheetsInitialized.current.bp && sheets.bp && sheets.bp.length > 0) {
-      sheetsInitialized.current.bp = true;
-      setBp(sheets.bp);
-    }
-  }, [sheets.bp]);
-
-  useEffect(() => {
-    if (!sheetsInitialized.current.inbody && sheets.inbody && sheets.inbody.length > 0) {
-      sheetsInitialized.current.inbody = true;
-      setInbody(sheets.inbody);
-    }
+    if (sheets.inbody && sheets.inbody.length > 0) setInbody(sheets.inbody);
   }, [sheets.inbody]);
 
   useEffect(() => {
-    if (!sheetsInitialized.current.consults && sheets.consults && sheets.consults.length > 0) {
-      sheetsInitialized.current.consults = true;
-      setConsults(sheets.consults);
-    }
+    if (sheets.consults && sheets.consults.length > 0) setConsults(sheets.consults);
   }, [sheets.consults]);
 
   useEffect(() => {
-    if (!sheetsInitialized.current.groups && sheets.groups !== null && sheets.groups !== undefined) {
-      sheetsInitialized.current.groups = true;
+    if (sheets.bp && sheets.bp.length > 0) setBp(sheets.bp);
+  }, [sheets.bp]);
+
+  useEffect(() => {
+    if (sheets.groups !== null && sheets.groups !== undefined) {
+      console.log('[App] 구글 시트 기수행사 데이터 적용:', sheets.groups.length, '건');
       setGroups(sheets.groups);
     }
   }, [sheets.groups]);

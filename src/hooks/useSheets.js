@@ -125,6 +125,8 @@ export function useSheets() {
 
   useEffect(() => {
     load();
+    const interval = setInterval(load, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return { ...data, loading, error, reload: load };
