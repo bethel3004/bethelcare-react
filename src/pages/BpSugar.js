@@ -220,4 +220,3 @@ export default function BpSugar({ db }) {
     </div>
   );
 }
-
