@@ -48,9 +48,10 @@ export default function App() {
   const sheets = useSheets();
   const reloadSheets = sheets.reload;
 
+  const patientsLoaded = useRef(false);
   useEffect(() => {
-    if (sheets.patients && sheets.patients.length > 0) {
-      console.log('[App] 구글 시트 입소자 데이터 적용:', sheets.patients.length, '명');
+    if (!patientsLoaded.current && sheets.patients && sheets.patients.length > 0) {
+      patientsLoaded.current = true;
       setPatients(sheets.patients);
     }
   }, [sheets.patients]);
@@ -59,17 +60,20 @@ export default function App() {
     if (sheets.inbody && sheets.inbody.length > 0) setInbody(sheets.inbody);
   }, [sheets.inbody]);
 
+  const consultsLoaded = useRef(false);
   useEffect(() => {
-    if (sheets.consults && sheets.consults.length > 0) setConsults(sheets.consults);
+    if (!consultsLoaded.current && sheets.consults && sheets.consults.length > 0) { consultsLoaded.current = true; setConsults(sheets.consults); }
   }, [sheets.consults]);
 
+  const bpLoaded = useRef(false);
   useEffect(() => {
-    if (sheets.bp && sheets.bp.length > 0) setBp(sheets.bp);
+    if (!bpLoaded.current && sheets.bp && sheets.bp.length > 0) { bpLoaded.current = true; setBp(sheets.bp); }
   }, [sheets.bp]);
 
+  const groupsLoaded = useRef(false);
   useEffect(() => {
-    if (sheets.groups !== null && sheets.groups !== undefined) {
-      console.log('[App] 구글 시트 기수행사 데이터 적용:', sheets.groups.length, '건');
+    if (!groupsLoaded.current && sheets.groups !== null && sheets.groups !== undefined) {
+      groupsLoaded.current = true;
       setGroups(sheets.groups);
     }
   }, [sheets.groups]);
