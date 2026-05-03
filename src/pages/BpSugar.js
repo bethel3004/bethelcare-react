@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
-import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets'; 
+import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
   const { patients, bp, setBp, isGuest } = db;
@@ -83,20 +83,40 @@ export default function BpSugar({ db }) {
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
-       {(tab==='list' || tab==='add') && (
+(tab==='list' || tab==='add') && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
-              value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
-            <select className="form-select" style={{width:140}} value={sel}
-              onChange={e=>{setSel(e.target.value);setSearch('');}}>
-              <option value="전체">전체</option>
-              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
+              value={tab==='add' ? addSearch : search}
+              onChange={e=>{
+                if(tab==='add') setAddSearch(e.target.value);
+                else {setSearch(e.target.value);setSel('전체');}
+              }}/>
+            <select className="form-select" style={{width:140}}
+              value={tab==='add' ? form.성명 : sel}
+              onChange={e=>{
+                if(tab==='add') setForm({...form,성명:e.target.value});
+                else {setSel(e.target.value);setSearch('');}
+              }}>
+              {tab==='add' ? (
+                <>
+                  <option value="">선택</option>
+                  {(addSearch ? patients.filter(p=>p.성명.includes(addSearch)) : patients).map(p=><option key={p.ID}>{p.성명}</option>)}
+                </>
+              ) : (
+                <>
+                  <option value="전체">전체</option>
+                  {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
+                </>
+              )}
             </select>
-            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+            {(tab==='list' ? search : addSearch) && (
+              <button className="btn btn-ghost btn-sm" onClick={()=>{
+                if(tab==='add'){setAddSearch('');setForm({...form,성명:''});}
+                else setSearch('');
+              }}>✕</button>
+            )}
           </div>
         )}
-
-      </div>
 
       {/* 기록 조회 */}
       {tab==='list' && (
