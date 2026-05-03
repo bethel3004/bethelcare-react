@@ -3,10 +3,11 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
-  const { patients, bp, setBp, isGuest, reloadSheets } = db;
+  const { patients, bp, setBp, isGuest } = db;
   const [tab, setTab] = useState('list');
   const [search, setSearch] = useState('');
   const [sel, setSel] = useState('전체');
+  const [addSearch, setAddSearch] = useState('');
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
@@ -17,6 +18,11 @@ export default function BpSugar({ db }) {
     if (search) return (getName(r)||'').includes(search);
     return true;
   });
+
+  // 기록 입력 탭 — 이름 검색으로 필터된 환자 목록
+  const filteredPatients = addSearch
+    ? patients.filter(p => p.성명.includes(addSearch))
+    : patients;
 
   const chartData = sel !== '전체'
     ? [...filtered].sort((a,b)=>(a?.날짜||'').localeCompare(b?.날짜||'')).map(r=>({
@@ -38,14 +44,18 @@ export default function BpSugar({ db }) {
     const newBp = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setBp([...bp, newBp]);
     appendToSheet('혈당혈압', newBp);
-    setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setForm({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
+    setAddSearch('');
     setTab('list');
   };
 
   const handleEdit = (e) => {
     e.preventDefault();
-    setBp(bp.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
+    setBp(prev => prev.map(r => {
+      if (editTarget._rowIndex && r._rowIndex && r._rowIndex === editTarget._rowIndex) return { ...editForm };
+      if (editTarget.ID && r.ID && r.ID === editTarget.ID) return { ...editForm };
+      return r;
+    }));
     if (editForm._rowIndex) updateSheet('혈당혈압', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('list');
   };
@@ -173,11 +183,33 @@ export default function BpSugar({ db }) {
           <div className="card-header"><span className="card-title">혈당·혈압 기록 입력</span></div>
           <form className="card-body" onSubmit={handleAdd}>
             <div className="form-grid form-grid-2">
-              <div className="form-group"><label className="form-label required">입소자</label>
-                <select className="form-select" value={form.성명} onChange={e=>setForm({...form,성명:e.target.value})}>
+              <div className="form-group">
+                <label className="form-label required">입소자</label>
+                <div style={{display:'flex',gap:8,marginBottom:6}}>
+                  <input
+                    className="form-input"
+                    placeholder="🔍 이름 검색..."
+                    value={addSearch}
+                    onChange={e => {
+                      setAddSearch(e.target.value);
+                      setForm({...form, 성명:''});
+                    }}
+                  />
+                  {addSearch && (
+                    <button type="button" className="btn btn-ghost btn-sm"
+                      onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>
+                  )}
+                </div>
+                <select className="form-select" value={form.성명}
+                  onChange={e=>setForm({...form,성명:e.target.value})}>
                   <option value="">선택</option>
-                  {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
+                  {filteredPatients.map(p=><option key={p.ID}>{p.성명}</option>)}
                 </select>
+                {form.성명 && (
+                  <div style={{marginTop:6,fontSize:'0.8rem',color:'var(--accent)',fontWeight:600}}>
+                    ✓ {form.성명} 선택됨
+                  </div>
+                )}
               </div>
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
@@ -189,7 +221,7 @@ export default function BpSugar({ db }) {
             {parseInt(form.혈압수축기)>=140&&parseInt(form.혈압수축기)<160&&<div className="alert alert-amber" style={{marginTop:12}}>⚠ 혈압 {form.혈압수축기} — 높음.</div>}
             {parseInt(form.혈당)>=126&&<div className="alert alert-amber" style={{marginTop:12}}>⚠ 혈당 {form.혈당} — 주의 수치.</div>}
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setTab('list');setAddSearch('');}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
