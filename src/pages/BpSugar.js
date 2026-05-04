@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
-import { appendToSheet, updateSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
   const { patients, bp, setBp, isGuest } = db;
@@ -168,6 +168,7 @@ export default function BpSugar({ db }) {
                   if(editTarget.ID && r.ID) return r.ID !== editTarget.ID;
                   return true;
                 }));
+                if(editTarget._rowIndex) deleteFromSheet('혈당혈압', editTarget._rowIndex);
                 setEditTarget(null); setEditForm(null); setTab('list');
               }}>🗑 삭제</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
