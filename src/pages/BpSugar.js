@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
-import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
+import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function BpSugar({ db }) {
   const { patients, bp, setBp, isGuest } = db;
@@ -12,20 +12,18 @@ export default function BpSugar({ db }) {
   const [editForm, setEditForm] = useState(null);
   const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
 
-  const getName = r => r.성명 || '';
   const filtered = bp.filter(r => {
-    if (sel !== '전체') return getName(r) === sel;
-    if (search) return (getName(r)||'').includes(search);
+    if (sel !== '전체') return (r.성명||'') === sel;
+    if (search) return (r.성명||'').includes(search);
     return true;
   });
 
-  // 기록 입력 탭 — 이름 검색으로 필터된 환자 목록
-  const filteredPatients = addSearch
+  const filteredForAdd = addSearch
     ? patients.filter(p => p.성명.includes(addSearch))
     : patients;
 
   const chartData = sel !== '전체'
-    ? [...filtered].sort((a,b)=>(a?.날짜||'').localeCompare(b?.날짜||'')).map(r=>({
+    ? [...filtered].sort((a,b)=>(a.날짜||'').localeCompare(b.날짜||'')).map(r=>({
         날짜:(r.날짜||'').slice(5),
         수축기:parseInt(r.혈압수축기)||0,
         이완기:parseInt(r.혈압이완기)||0,
@@ -52,15 +50,15 @@ export default function BpSugar({ db }) {
   const handleEdit = (e) => {
     e.preventDefault();
     setBp(prev => prev.map(r => {
-      if (editTarget._rowIndex && r._rowIndex && r._rowIndex === editTarget._rowIndex) return { ...editForm };
-      if (editTarget.ID && r.ID && r.ID === editTarget.ID) return { ...editForm };
+      if (editTarget._rowIndex && r._rowIndex && r._rowIndex === editTarget._rowIndex) return {...editForm};
+      if (editTarget.ID && r.ID && r.ID === editTarget.ID) return {...editForm};
       return r;
     }));
     if (editForm._rowIndex) updateSheet('혈당혈압', editForm._rowIndex, editForm);
     setEditTarget(null); setEditForm(null); setTab('list');
   };
 
-  const f = k => ({ value:form[k], onChange:e=>setForm({...form,[k]:e.target.value}) });
+  const f = k => ({ value:form[k]||'', onChange:e=>setForm({...form,[k]:e.target.value}) });
   const ef = k => ({ value:editForm?.[k]||'', onChange:e=>setEditForm({...editForm,[k]:e.target.value}) });
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -83,40 +81,31 @@ export default function BpSugar({ db }) {
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
-        {(tab==='list' || tab==='add') && (
+        {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
-              value={tab==='add' ? addSearch : search}
-              onChange={e=>{
-                if(tab==='add') setAddSearch(e.target.value);
-                else {setSearch(e.target.value);setSel('전체');}
-              }}/>
-            <select className="form-select" style={{width:140}}
-              value={tab==='add' ? form.성명 : sel}
-              onChange={e=>{
-                if(tab==='add') setForm({...form,성명:e.target.value});
-                else {setSel(e.target.value);setSearch('');}
-              }}>
-              {tab==='add' ? (
-                <>
-                  <option value="">선택</option>
-                  {(addSearch ? patients.filter(p=>p.성명.includes(addSearch)) : patients).map(p=><option key={p.ID}>{p.성명}</option>)}
-                </>
-              ) : (
-                <>
-                  <option value="전체">전체</option>
-                  {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-                </>
-              )}
+              value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
+            <select className="form-select" style={{width:140}} value={sel}
+              onChange={e=>{setSel(e.target.value);setSearch('');}}>
+              <option value="전체">전체</option>
+              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
             </select>
-            {(tab==='list' ? search : addSearch) && (
-              <button className="btn btn-ghost btn-sm" onClick={()=>{
-                if(tab==='add'){setAddSearch('');setForm({...form,성명:''});}
-                else setSearch('');
-              }}>✕</button>
-            )}
+            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
           </div>
         )}
+        {tab==='add' && (
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
+              value={addSearch} onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''}); }}/>
+            <select className="form-select" style={{width:140}} value={form.성명}
+              onChange={e=>setForm({...form,성명:e.target.value})}>
+              <option value="">선택</option>
+              {filteredForAdd.map(p=><option key={p.ID}>{p.성명}</option>)}
+            </select>
+            {addSearch && <button className="btn btn-ghost btn-sm" onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>}
+          </div>
+        )}
+      </div>
 
       {/* 기록 조회 */}
       {tab==='list' && (
@@ -148,21 +137,14 @@ export default function BpSugar({ db }) {
             </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th style={{whiteSpace:'nowrap'}}>날짜</th><th style={{whiteSpace:'nowrap'}}>이름</th><th>혈당(mg/dL)</th><th>혈압(mmHg)</th><th>비고</th><th></th></tr></thead>
+                <thead><tr><th>날짜</th><th>이름</th><th>혈당(mg/dL)</th><th>혈압(mmHg)</th><th>비고</th><th></th></tr></thead>
                 <tbody>
-                  {[...filtered].sort((a,b)=>(b?.날짜||'').localeCompare(a?.날짜||'')).map((r,i)=>(
+                  {[...filtered].sort((a,b)=>(b.날짜||'').localeCompare(a.날짜||'')).map((r,i)=>(
                     <tr key={i}>
                       <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{r.날짜}</td>
                       <td style={{whiteSpace:'nowrap'}}>{r.성명}</td>
-                      <td>
-                        {r.혈당 && <span className={bsColor(r.혈당)}>{r.혈당}</span>}
-                        {parseInt(r.혈당)>=126 && <span className="badge badge-red" style={{fontSize:'0.65rem',marginLeft:4}}>주의</span>}
-                      </td>
-                      <td>
-                        {r.혈압수축기 && <span className={bpColor(r.혈압수축기)}>{r.혈압수축기}/{r.혈압이완기}</span>}
-                        {parseInt(r.혈압수축기)>=160 && <span className="badge badge-red" style={{fontSize:'0.65rem',marginLeft:4}}>매우높음</span>}
-                        {parseInt(r.혈압수축기)>=140&&parseInt(r.혈압수축기)<160 && <span className="badge badge-amber" style={{fontSize:'0.65rem',marginLeft:4}}>높음</span>}
-                      </td>
+                      <td>{r.혈당 && <span className={bsColor(r.혈당)}>{r.혈당}</span>}</td>
+                      <td>{r.혈압수축기 && <span className={bpColor(r.혈압수축기)}>{r.혈압수축기}/{r.혈압이완기}</span>}</td>
                       <td style={{color:'var(--text3)',fontSize:'0.8rem'}}>{r.비고||'-'}</td>
                       <td>{!isGuest && <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️</button>}</td>
                     </tr>
@@ -206,10 +188,9 @@ export default function BpSugar({ db }) {
             <div className="form-grid form-grid-2">
               <div className="form-group">
                 <label className="form-label required">입소자</label>
-                <div style={{padding:'8px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.875rem',fontWeight:600,color:form.성명?'var(--accent)':'var(--text3)'}}>
-                  {form.성명 ? '✓ ' + form.성명 + ' 선택됨' : '위에서 이름 검색 후 선택하세요 ↑'}
+                <div style={{padding:'10px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.875rem',fontWeight:600,color:form.성명?'var(--accent)':'var(--text3)'}}>
+                  {form.성명 ? '✓ ' + form.성명 + ' 선택됨' : '위 검색창에서 이름 검색 후 선택 ↑'}
                 </div>
-                {form.성명 && <div style={{marginTop:4,fontSize:'0.8rem',color:'var(--accent)',fontWeight:600}}>✓ {form.성명} 선택됨</div>}
               </div>
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
