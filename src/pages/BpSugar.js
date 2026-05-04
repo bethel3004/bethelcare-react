@@ -75,7 +75,7 @@ export default function BpSugar({ db }) {
     <div>
       <div className="page-header"><h1>혈당·혈압 기록</h1><p>날짜별 측정 기록 및 추이 분석</p></div>
 
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:12,rowGap:12}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:8}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
@@ -91,18 +91,6 @@ export default function BpSugar({ db }) {
               {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
             </select>
             {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
-          </div>
-        )}
-        {tab==='add' && (
-          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-            <input className="form-input" style={{minWidth:140}} placeholder="🔍 이름 검색..."
-              value={addSearch} onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''}); }}/>
-            <select className="form-select" style={{width:140}} value={form.성명}
-              onChange={e=>setForm({...form,성명:e.target.value})}>
-              <option value="">전체</option>
-              {filteredForAdd.map(p=><option key={p.ID}>{p.성명}</option>)}
-            </select>
-            {addSearch && <button className="btn btn-ghost btn-sm" onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>}
           </div>
         )}
       </div>
@@ -185,13 +173,31 @@ export default function BpSugar({ db }) {
         <div className="card">
           <div className="card-header"><span className="card-title">혈당·혈압 기록 입력</span></div>
           <form className="card-body" onSubmit={handleAdd}>
-            <div className="form-grid form-grid-2">
-              <div className="form-group">
-                <label className="form-label required">입소자</label>
-                <div style={{padding:'10px 12px',background:'var(--bg2)',borderRadius:8,fontSize:'0.875rem',fontWeight:600,color:form.성명?'var(--accent)':'var(--text3)'}}>
-                  {form.성명 ? '✓ ' + form.성명 + ' 선택됨' : '위 검색창에서 이름 검색 후 선택 ↑'}
-                </div>
+            <div className="form-group" style={{marginBottom:16}}>
+              <label className="form-label required">입소자 검색 및 선택</label>
+              <div style={{display:'flex',gap:8,marginBottom:8}}>
+                <input className="form-input" placeholder="🔍 이름 검색..."
+                  value={addSearch}
+                  onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''}); }}
+                  style={{flex:1}}
+                />
+                {addSearch && (
+                  <button type="button" className="btn btn-ghost btn-sm"
+                    onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>
+                )}
               </div>
+              <select className="form-select" value={form.성명}
+                onChange={e=>setForm({...form,성명:e.target.value})}>
+                <option value="">전체 ({filteredForAdd.length}명)</option>
+                {filteredForAdd.map(p=><option key={p.ID}>{p.성명}</option>)}
+              </select>
+              {form.성명 && (
+                <div style={{marginTop:6,fontSize:'0.85rem',color:'var(--accent)',fontWeight:600}}>
+                  ✓ {form.성명} 선택됨
+                </div>
+              )}
+            </div>
+            <div className="form-grid form-grid-2">
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
               <div className="form-group"><label className="form-label">혈압 수축기</label><input type="number" className="form-input" placeholder="120" {...f('혈압수축기')}/></div>
