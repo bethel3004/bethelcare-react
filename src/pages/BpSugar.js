@@ -79,7 +79,6 @@ export default function BpSugar({ db }) {
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
-          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -162,6 +161,15 @@ export default function BpSugar({ db }) {
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+              <button type="button" className="btn btn-danger" onClick={()=>{
+                if(!window.confirm('이 기록을 삭제할까요?')) return;
+                setBp(prev=>prev.filter(r=>{
+                  if(editTarget._rowIndex && r._rowIndex) return r._rowIndex !== editTarget._rowIndex;
+                  if(editTarget.ID && r.ID) return r.ID !== editTarget.ID;
+                  return true;
+                }));
+                setEditTarget(null); setEditForm(null); setTab('list');
+              }}>🗑 삭제</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -173,30 +181,17 @@ export default function BpSugar({ db }) {
         <div className="card">
           <div className="card-header"><span className="card-title">혈당·혈압 기록 입력</span></div>
           <form className="card-body" onSubmit={handleAdd}>
-            <div className="form-group" style={{marginBottom:16}}>
-              <label className="form-label required">입소자 검색 및 선택</label>
-              <div style={{display:'flex',gap:8,marginBottom:8}}>
-                <input className="form-input" placeholder="🔍 이름 검색..."
-                  value={addSearch}
-                  onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''}); }}
-                  style={{flex:1}}
+              <div className="form-group">
+                <label className="form-label required">입소자 이름</label>
+                <input className="form-input" placeholder="이름 입력"
+                  value={form.성명}
+                  onChange={e=>setForm({...form,성명:e.target.value})}
+                  list="patient-list"
                 />
-                {addSearch && (
-                  <button type="button" className="btn btn-ghost btn-sm"
-                    onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>
-                )}
+                <datalist id="patient-list">
+                  {patients.map(p=><option key={p.ID} value={p.성명}/>)}
+                </datalist>
               </div>
-              <select className="form-select" value={form.성명}
-                onChange={e=>setForm({...form,성명:e.target.value})}>
-                <option value="">전체 ({filteredForAdd.length}명)</option>
-                {filteredForAdd.map(p=><option key={p.ID}>{p.성명}</option>)}
-              </select>
-              {form.성명 && (
-                <div style={{marginTop:6,fontSize:'0.85rem',color:'var(--accent)',fontWeight:600}}>
-                  ✓ {form.성명} 선택됨
-                </div>
-              )}
-            </div>
             <div className="form-grid form-grid-2">
               <div className="form-group"><label className="form-label">날짜</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">혈당 (mg/dL)</label><input type="number" className="form-input" placeholder="100" {...f('혈당')}/></div>
