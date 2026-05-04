@@ -75,7 +75,7 @@ export default function BpSugar({ db }) {
     <div>
       <div className="page-header"><h1>혈당·혈압 기록</h1><p>날짜별 측정 기록 및 추이 분석</p></div>
 
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:8}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:12,rowGap:12}}>
         <div className="tabs">
           <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>기록 입력</button>}
@@ -94,12 +94,12 @@ export default function BpSugar({ db }) {
           </div>
         )}
         {tab==='add' && (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
+          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+            <input className="form-input" style={{minWidth:140}} placeholder="🔍 이름 검색..."
               value={addSearch} onChange={e=>{setAddSearch(e.target.value);setForm({...form,성명:''}); }}/>
             <select className="form-select" style={{width:140}} value={form.성명}
               onChange={e=>setForm({...form,성명:e.target.value})}>
-              <option value="">선택</option>
+              <option value="">전체</option>
               {filteredForAdd.map(p=><option key={p.ID}>{p.성명}</option>)}
             </select>
             {addSearch && <button className="btn btn-ghost btn-sm" onClick={()=>{setAddSearch('');setForm({...form,성명:''});}}>✕</button>}
