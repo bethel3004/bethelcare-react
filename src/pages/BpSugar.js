@@ -131,13 +131,16 @@ export default function BpSugar({ db }) {
                   onClick={()=>setStatusFilter(s)}>{s}</button>
               ))}
             </div>
-            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
-              {campList.map(c => (
-                <button key={c}
-                  className={campFilter===c?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
-                  onClick={()=>setCampFilter(c)}>{c}</button>
+            <select
+              value={campFilter}
+              onChange={e => setCampFilter(e.target.value)}
+              className="form-select"
+              style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:120}}>
+              <option value="전체">캠프장소 전체</option>
+              {campList.filter(c => c !== '전체').map(c => (
+                <option key={c} value={c}>{c}</option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* 입소자 카드 목록 */}
