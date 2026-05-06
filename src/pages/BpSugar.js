@@ -14,6 +14,7 @@ export default function BpSugar({ db }) {
   const [editForm, setEditForm] = useState(null);
   const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
   const [nameSearch, setNameSearch] = useState('');
+  const [campFilter, setCampFilter] = useState('전체');
 
   const bpColor = v => parseInt(v)>=160?'val-danger':parseInt(v)>=140?'val-warning':'val-good';
   const bsColor = v => parseInt(v)>=126?'val-danger':parseInt(v)>=100?'val-warning':'val-good';
@@ -28,9 +29,12 @@ export default function BpSugar({ db }) {
   const getRecordCount = (name) => bp.filter(r => r.성명 === name).length;
 
   // 필터링된 입소자 목록 (bp 기록이 있는 입소자 우선, 없어도 표시)
+  const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
+
   const filteredPatients = patients.filter(p => {
     if (statusFilter === '입소중' && p.상태 !== '입소중') return false;
     if (statusFilter === '퇴소' && p.상태 !== '퇴소') return false;
+    if (campFilter !== '전체' && p.캠프장소 !== campFilter) return false;
     if (search && !p.성명?.includes(search)) return false;
     return true;
   });
@@ -117,14 +121,21 @@ export default function BpSugar({ db }) {
         <div>
           {/* 검색/필터 */}
           <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
-            <input className="form-input" style={{maxWidth:200}} placeholder="🔍 이름 검색..."
+            <input className="form-input" style={{maxWidth:180}} placeholder="🔍 이름 검색..."
               value={search} onChange={e => setSearch(e.target.value)}/>
             {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
-            <div style={{display:'flex',gap:4}}>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
               {['전체','입소중','퇴소'].map(s => (
                 <button key={s}
                   className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
                   onClick={()=>setStatusFilter(s)}>{s}</button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+              {campList.map(c => (
+                <button key={c}
+                  className={campFilter===c?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                  onClick={()=>setCampFilter(c)}>{c}</button>
               ))}
             </div>
           </div>
