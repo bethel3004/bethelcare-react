@@ -16,8 +16,7 @@ const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A705
 // 유효한 입소기간만 반환 (YYYY-MM-DD ~ YYYY-MM-DD 형식, -00 날짜 제외)
 function validAdmissions(str) {
   if (!str) return [];
-  return (str).split(/
-/).map(s => s.trim()).filter(s => {
+  return str.split('\n').map(s => s.trim()).filter(s => {
     const m = s.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
     if (!m) return false;
     if (m[1].endsWith('-00') || m[2].endsWith('-00')) return false;
