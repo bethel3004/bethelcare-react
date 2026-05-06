@@ -13,6 +13,18 @@ import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
+// 유효한 입소기간만 반환 (YYYY-MM-DD ~ YYYY-MM-DD 형식, -00 날짜 제외)
+function validAdmissions(str) {
+  if (!str) return [];
+  return (str).split(/
+/).map(s => s.trim()).filter(s => {
+    const m = s.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
+    if (!m) return false;
+    if (m[1].endsWith('-00') || m[2].endsWith('-00')) return false;
+    return true;
+  });
+}
+
 // 입소기간 달력 입력 컴포넌트 (전체 수정 가능)
 // initialRows: 기존 입소기간 배열(수정 가능), onChange: 전체 기간 배열 콜백
 function AdmissionPicker({ initialRows, onChange }) {
@@ -203,7 +215,7 @@ export default function Patients({ db }) {
                   </div>
                 </div>
                 <div style={{fontSize:'0.8rem',color:'var(--text3)'}}>
-                  {(p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).slice(-1)[0] || ''}
+                  {validAdmissions(p.입소기간).slice(-1)[0] || ''}
                 </div>
                 <span style={{color:'var(--text3)',fontSize:'0.8rem'}}>{selected?.ID===p.ID?'▲':'▼'}</span>
               </div>
@@ -215,9 +227,12 @@ export default function Patients({ db }) {
                       <div className="section-label">인적사항</div>
                       {[
                         ['캠프장소', p.캠프장소],
-                        ['최근 입소기간', (p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).slice(-1)[0] || '-'],
-                        ['전체 입소이력', (p.입소기간||'').split('\n').filter(Boolean).length > 1
-                          ? (p.입소기간||'').split(/[\n/]/).map(s=>s.trim()).filter(Boolean).join('\n') : null],
+                        validAdmissions(p.입소기간).slice(-1)[0]
+                          ? ['최근 입소기간', validAdmissions(p.입소기간).slice(-1)[0]]
+                          : null,
+                        validAdmissions(p.입소기간).length > 1
+                          ? ['전체 입소이력', validAdmissions(p.입소기간).join('\n')]
+                          : null,
                         ['생년월일', p.생년월일],
                         ['신장 / 체중', `${getVal(p,'신장','신장(cm)')||'-'}cm / ${getVal(p,'현재체중','현재체중(kg)')||'-'}kg`],
                         ['주소', p.주소],
