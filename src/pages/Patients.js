@@ -8,18 +8,22 @@ function formatPhone(v) {
   return n;
 }
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getHashParams, pushHashParams } from '../utils/urlParams';
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
 
-// 유효한 입소기간만 반환 (YYYY-MM-DD ~ YYYY-MM-DD 형식, -00 날짜 제외)
+// 유효한 입소기간만 반환
+// 조건: YYYY-MM-DD ~ YYYY-MM-DD 형식 + 연도 2020 이상 + 일(day)이 00이 아님
 function validAdmissions(str) {
   if (!str) return [];
   return str.split('\n').map(s => s.trim()).filter(s => {
-    const m = s.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
+    const m = s.match(/(\d{4})-(\d{2})-(\d{2})\s*~\s*(\d{4})-(\d{2})-(\d{2})/);
     if (!m) return false;
-    if (m[1].endsWith('-00') || m[2].endsWith('-00')) return false;
+    const [, y1,,d1, y2,,d2] = m;
+    if (parseInt(y1) < 2020 || parseInt(y2) < 2020) return false; // 생년월일 등 오래된 날짜 제외
+    if (d1 === '00' || d2 === '00') return false; // 잘못된 날짜 제외
     return true;
   });
 }
@@ -61,11 +65,31 @@ function AdmissionPicker({ initialRows, onChange }) {
 
 export default function Patients({ db }) {
   const { patients, setPatients, isGuest, reloadSheets } = db;
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('전체');
-  const [campFilter, setCampFilter] = useState('전체');
-  const [tab, setTab] = useState('list');
-  const [selected, setSelected] = useState(null);
+  const initState = () => {
+    const p = getHashParams();
+    return { search: p.search||'', statusFilter: p.status||'전체', campFilter: p.camp||'전체', tab: p.tab||'list', selected: p.patient||null };
+  };
+  const [urlState, setUrlState] = useState(initState);
+  const { search, statusFilter, campFilter, tab, selected } = urlState;
+
+  const updateState = useCallback((next) => {
+    setUrlState(prev => {
+      const merged = { ...prev, ...next };
+      pushHashParams('patients', { search: merged.search, status: merged.statusFilter, camp: merged.campFilter, patient: merged.selected||'', tab: merged.tab });
+      return merged;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.hash.startsWith('#patients')) return;
+      const p = getHashParams();
+      setUrlState({ search: p.search||'', statusFilter: p.status||'전체', campFilter: p.camp||'전체', tab: p.tab||'list', selected: p.patient||null });
+      setEditTarget(null); setEditForm(null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [admissions, setAdmissions] = useState([{ start: '', end: '' }]);
@@ -128,7 +152,7 @@ export default function Patients({ db }) {
       혈압_입소시:'', 혈당_입소시:'', 주소:'', 본인연락처:'',
       보호자이름:'', 보호자연락처:'', 보호자관계:'',
       병명:'', 치료경력:'', 입소기간:'', 상담자:'', 상태:'입소중' });
-    setTab('list');
+    updateState({tab:'list'});
   };
 
   const handleEdit = (e) => {
@@ -145,7 +169,7 @@ export default function Patients({ db }) {
     }));
     // 구글 시트 쓰기 (로컬 상태는 이미 반영 — reloadSheets 호출 안 함)
     if (updatedForm._rowIndex) updateSheet('입소자', updatedForm._rowIndex, updatedForm);
-    setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); setTab('list');
+    setEditTarget(null); setEditForm(null); setAdmissions([{ start: '', end: '' }]); updateState({tab:'list'});
   };
 
   const f = (key) => ({ value: form[key], onChange: e => setForm({ ...form, [key]: e.target.value }) });
@@ -160,10 +184,10 @@ export default function Patients({ db }) {
 
       <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center', gap:10, marginBottom:20 }}>
         <div className="tabs">
-          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
-          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>신규 등록</button>}
+          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>updateState({tab:'list'})}>목록</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>updateState({tab:'add'})}>신규 등록</button>}
           {editTarget && (
-            <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>
+            <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>updateState({tab:'edit'})}>
               ✏️ {editTarget.성명} 수정
             </button>
           )}
@@ -172,14 +196,14 @@ export default function Patients({ db }) {
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
               {['전체','입소중','퇴소'].map(s=>(
-                <button key={s} onClick={()=>setStatusFilter(s)}
+                <button key={s} onClick={()=>updateState({statusFilter: s})}
                   className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}>
                   {s}
                 </button>
               ))}
               <select
                 value={campFilter}
-                onChange={e=>setCampFilter(e.target.value)}
+                onChange={e=>updateState({campFilter: e.target.value})}
                 className="form-select"
                 style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:100}}>
                 <option value="전체">캠프장소 전체</option>
@@ -189,7 +213,7 @@ export default function Patients({ db }) {
               </select>
             </div>
             <input className="form-input" style={{width:180}} placeholder="이름 또는 병명 검색..."
-              value={search} onChange={e=>setSearch(e.target.value)} />
+              value={search} onChange={e=>updateState({search: e.target.value})} />
           </div>
         )}
       </div>
@@ -272,7 +296,7 @@ export default function Patients({ db }) {
                     </div>
                   </div>
                   <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:14}}>
-                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);setTab('edit');}}>✏️ 수정</button>
+                    <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(p);setEditForm({...p});setAdmissions(parseAdmissions(p.입소기간));setSelected(null);updateState({tab:'edit'});}}>✏️ 수정</button>
                     <button className="btn btn-danger btn-sm" onClick={()=>{ if(p._rowIndex) deleteFromSheet('입소자', p._rowIndex); setPatients(patients.filter(x=> x._rowIndex ? x._rowIndex !== p._rowIndex : (x.ID ? x.ID !== p.ID : x !== p))); setSelected(null); }}>🗑️ 삭제</button>
                   </div>
                 </div>
@@ -287,7 +311,7 @@ export default function Patients({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editTarget?.성명} 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'list'});}}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEdit}>
             <div className="section-label">기본 인적사항</div>
@@ -325,7 +349,7 @@ export default function Patients({ db }) {
               </div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'list'});}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -375,7 +399,7 @@ export default function Patients({ db }) {
               </div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>updateState({tab:'list'})}>취소</button>
               <button type="submit" className="btn btn-primary">등록하기</button>
             </div>
           </form>
