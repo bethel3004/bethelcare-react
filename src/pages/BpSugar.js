@@ -1,45 +1,117 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
 const AVATAR_COLORS = ['#7A6552','#5C7A6A','#7A5C6A','#6A7A5C','#5C6A7A','#7A7052'];
+const BASE_HASH = '#bp_sugar';
 
+// ── URL 파라미터 유틸 ─────────────────────────────────────
+function getHashParams() {
+  const hash = window.location.hash;
+  const qIdx = hash.indexOf('?');
+  if (qIdx === -1) return {};
+  const params = {};
+  hash.slice(qIdx + 1).split('&').forEach(part => {
+    const eq = part.indexOf('=');
+    if (eq === -1) return;
+    const k = decodeURIComponent(part.slice(0, eq));
+    const v = decodeURIComponent(part.slice(eq + 1));
+    params[k] = v;
+  });
+  return params;
+}
+
+function buildHash(params) {
+  const entries = Object.entries(params).filter(([, v]) => v && v !== '전체' && v !== 'list' && v !== '');
+  if (!entries.length) return BASE_HASH;
+  const query = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+  return `${BASE_HASH}?${query}`;
+}
+
+function pushParams(params) {
+  const newHash = buildHash(params);
+  if (window.location.hash !== newHash) {
+    window.history.pushState(null, '', newHash);
+  }
+}
+
+// ── 컴포넌트 ─────────────────────────────────────────────
 export default function BpSugar({ db }) {
-  const { patients, bp, setBp, isGuest, reloadSheets } = db;
-  const [tab, setTab] = useState('list');
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('전체');
-  const [selected, setSelected] = useState(null); // 선택된 입소자 성명
-  const [editTarget, setEditTarget] = useState(null);
-  const [editForm, setEditForm] = useState(null);
-  const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
-  const [nameSearch, setNameSearch] = useState('');
-  const [campFilter, setCampFilter] = useState('전체');
+  const { patients, bp, setBp, isGuest } = db;
 
+  // URL에서 초기 상태 읽기
+  const initFromURL = useCallback(() => {
+    const p = getHashParams();
+    return {
+      tab:          p.tab        || 'list',
+      search:       p.search     || '',
+      statusFilter: p.status     || '전체',
+      campFilter:   p.camp       || '전체',
+      selected:     p.patient    || null,
+    };
+  }, []);
+
+  const [state, setState] = useState(initFromURL);
+  const { tab, search, statusFilter, campFilter, selected } = state;
+
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm,   setEditForm]   = useState(null);
+  const [form, setForm] = useState({ 성명:'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
+
+  // 상태 변경 시 URL 업데이트
+  const updateState = useCallback((next) => {
+    const merged = { ...state, ...next };
+    setState(merged);
+    pushParams({
+      status:  merged.statusFilter,
+      camp:    merged.campFilter,
+      search:  merged.search,
+      patient: merged.selected || '',
+      tab:     merged.tab,
+    });
+  }, [state]);
+
+  // 뒤로가기/앞으로가기 처리
+  useEffect(() => {
+    const onPop = () => {
+      const p = getHashParams();
+      // 현재 페이지가 bp_sugar인지 확인
+      if (!window.location.hash.startsWith(BASE_HASH)) return;
+      setState({
+        tab:          p.tab     || 'list',
+        search:       p.search  || '',
+        statusFilter: p.status  || '전체',
+        campFilter:   p.camp    || '전체',
+        selected:     p.patient || null,
+      });
+      setEditTarget(null);
+      setEditForm(null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // ── 데이터 계산 ─────────────────────────────────────────
   const bpColor = v => parseInt(v)>=160?'val-danger':parseInt(v)>=140?'val-warning':'val-good';
   const bsColor = v => parseInt(v)>=126?'val-danger':parseInt(v)>=100?'val-warning':'val-good';
 
-  // 입소자별 최근 기록 요약
   const getLatestRecord = (name) => {
     const records = bp.filter(r => r.성명 === name);
     if (!records.length) return null;
     return [...records].sort((a,b) => (b.날짜||'').localeCompare(a.날짜||''))[0];
   };
-
   const getRecordCount = (name) => bp.filter(r => r.성명 === name).length;
 
-  // 필터링된 입소자 목록 (bp 기록이 있는 입소자 우선, 없어도 표시)
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
   const filteredPatients = patients.filter(p => {
     if (statusFilter === '입소중' && p.상태 !== '입소중') return false;
-    if (statusFilter === '퇴소' && p.상태 !== '퇴소') return false;
+    if (statusFilter === '퇴소'   && p.상태 !== '퇴소')   return false;
     if (campFilter !== '전체' && p.캠프장소 !== campFilter) return false;
     if (search && !p.성명?.includes(search)) return false;
     return true;
   });
 
-  // 선택된 입소자의 bp 기록
   const selectedRecords = selected
     ? [...bp.filter(r => r.성명 === selected)].sort((a,b) => (b.날짜||'').localeCompare(a.날짜||''))
     : [];
@@ -55,6 +127,24 @@ export default function BpSugar({ db }) {
         }))
     : [];
 
+  // ── 이벤트 핸들러 ────────────────────────────────────────
+  const goList = () => updateState({ tab:'list', selected:null });
+  const goDetail = (name) => updateState({ tab:'detail', selected:name });
+  const goAdd = () => {
+    setForm({ 성명: selected||'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
+    updateState({ tab:'add' });
+  };
+  const goEdit = (r) => {
+    setEditTarget(r);
+    setEditForm({...r});
+    updateState({ tab:'edit' });
+  };
+  const goBackToDetail = () => {
+    setEditTarget(null);
+    setEditForm(null);
+    updateState({ tab:'detail' });
+  };
+
   const handleAdd = (e) => {
     e.preventDefault();
     if (!form.성명) return alert('입소자를 선택하세요.');
@@ -64,7 +154,7 @@ export default function BpSugar({ db }) {
     setBp([...bp, newBp]);
     appendToSheet('혈당혈압', newBp);
     setForm({ 성명: selected||'', 날짜:'', 혈당:'', 혈압수축기:'', 혈압이완기:'', 비고:'' });
-    setTab('list');
+    updateState({ tab:'detail' });
   };
 
   const handleEdit = (e) => {
@@ -75,7 +165,9 @@ export default function BpSugar({ db }) {
       r === editTarget ? { ...editForm } : r
     ));
     if (editForm._rowIndex) updateSheet('혈당혈압', editForm._rowIndex, editForm);
-    setEditTarget(null); setEditForm(null); setTab('list');
+    setEditTarget(null);
+    setEditForm(null);
+    updateState({ tab:'detail' });
   };
 
   const handleDelete = (r) => {
@@ -86,7 +178,7 @@ export default function BpSugar({ db }) {
     ));
   };
 
-  const f = k => ({ value: form[k], onChange: e => setForm({...form, [k]: e.target.value}) });
+  const f  = k => ({ value: form[k],       onChange: e => setForm({...form, [k]: e.target.value}) });
   const ef = k => ({ value: editForm?.[k]||'', onChange: e => setEditForm({...editForm, [k]: e.target.value}) });
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -99,6 +191,7 @@ export default function BpSugar({ db }) {
     );
   };
 
+  // ── 렌더 ────────────────────────────────────────────────
   return (
     <div>
       <div className="page-header">
@@ -109,31 +202,30 @@ export default function BpSugar({ db }) {
       {/* 탭 */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:8}}>
         <div className="tabs">
-          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>{setTab('list');setSelected(null);}}>입소자 목록</button>
-          {selected && <button className={`tab ${tab==='detail'?'active':''}`} onClick={()=>setTab('detail')}>📋 {selected} 기록</button>}
-          {selected && !isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setForm({성명:selected,날짜:'',혈당:'',혈압수축기:'',혈압이완기:'',비고:''});setTab('add');}}>+ 기록 입력</button>}
-          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
+          <button className={`tab ${tab==='list'?'active':''}`} onClick={goList}>입소자 목록</button>
+          {selected && <button className={`tab ${tab==='detail'?'active':''}`} onClick={()=>updateState({tab:'detail'})}>📋 {selected} 기록</button>}
+          {selected && !isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={goAdd}>+ 기록 입력</button>}
+          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>updateState({tab:'edit'})}>✏️ 수정</button>}
         </div>
       </div>
 
       {/* ── 입소자 목록 ── */}
       {tab === 'list' && (
         <div>
-          {/* 검색/필터 */}
           <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
             <input className="form-input" style={{maxWidth:180}} placeholder="🔍 이름 검색..."
-              value={search} onChange={e => setSearch(e.target.value)}/>
-            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+              value={search} onChange={e => updateState({search: e.target.value})}/>
+            {search && <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕</button>}
             <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
               {['전체','입소중','퇴소'].map(s => (
                 <button key={s}
                   className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
-                  onClick={()=>setStatusFilter(s)}>{s}</button>
+                  onClick={()=>updateState({statusFilter:s})}>{s}</button>
               ))}
             </div>
             <select
               value={campFilter}
-              onChange={e => setCampFilter(e.target.value)}
+              onChange={e => updateState({campFilter: e.target.value})}
               className="form-select"
               style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:120}}>
               <option value="전체">캠프장소 전체</option>
@@ -143,15 +235,14 @@ export default function BpSugar({ db }) {
             </select>
           </div>
 
-          {/* 입소자 카드 목록 */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:12}}>
             {filteredPatients.map((p, idx) => {
               const latest = getLatestRecord(p.성명);
-              const count = getRecordCount(p.성명);
+              const count  = getRecordCount(p.성명);
               return (
                 <div key={p.ID||idx} className="card"
                   style={{cursor:'pointer',transition:'box-shadow 0.15s'}}
-                  onClick={()=>{setSelected(p.성명);setTab('detail');}}>
+                  onClick={()=>goDetail(p.성명)}>
                   <div style={{padding:'16px'}}>
                     <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
                       <div className="avatar" style={{background:AVATAR_COLORS[idx%AVATAR_COLORS.length],flexShrink:0}}>
@@ -166,8 +257,6 @@ export default function BpSugar({ db }) {
                         <div style={{fontSize:'0.75rem',color:'var(--text3)',marginTop:2}}>{p.병명}</div>
                       </div>
                     </div>
-
-                    {/* 최근 기록 요약 */}
                     {latest ? (
                       <div style={{background:'var(--bg)',borderRadius:8,padding:'10px 12px'}}>
                         <div style={{fontSize:'0.7rem',color:'var(--text3)',marginBottom:6}}>최근 기록 — {latest.날짜} ({count}건)</div>
@@ -204,10 +293,9 @@ export default function BpSugar({ db }) {
         </div>
       )}
 
-      {/* ── 입소자별 상세 기록 ── */}
+      {/* ── 상세 기록 ── */}
       {tab === 'detail' && selected && (
         <div>
-          {/* 차트 */}
           {chartData.length > 1 && (
             <div className="card" style={{marginBottom:16}}>
               <div className="card-header"><span className="card-title">{selected} — 혈압·혈당 추이</span></div>
@@ -228,8 +316,6 @@ export default function BpSugar({ db }) {
               </div>
             </div>
           )}
-
-          {/* 기록 테이블 */}
           <div className="card">
             <div className="card-header">
               <span className="card-title">{selected} 날짜별 기록</span>
@@ -265,7 +351,7 @@ export default function BpSugar({ db }) {
                       {!isGuest && (
                         <td style={{whiteSpace:'nowrap'}}>
                           <button className="btn btn-ghost btn-sm" style={{marginRight:4}}
-                            onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️</button>
+                            onClick={()=>goEdit(r)}>✏️</button>
                           <button className="btn btn-danger btn-sm"
                             onClick={()=>handleDelete(r)}>🗑️</button>
                         </td>
@@ -284,7 +370,7 @@ export default function BpSugar({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editTarget?.성명} {editTarget?.날짜} 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('detail');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={goBackToDetail}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEdit}>
             <div className="form-grid form-grid-2">
@@ -296,7 +382,7 @@ export default function BpSugar({ db }) {
               <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...ef('비고')}/></div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('detail');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={goBackToDetail}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -308,7 +394,7 @@ export default function BpSugar({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">{selected} — 혈당·혈압 기록 입력</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>setTab('detail')}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>updateState({tab:'detail'})}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleAdd}>
             <div className="form-grid form-grid-2">
@@ -323,7 +409,7 @@ export default function BpSugar({ db }) {
             {parseInt(form.혈압수축기)>=140&&parseInt(form.혈압수축기)<160 && <div className="alert alert-amber" style={{marginTop:12}}>⚠ 혈압 {form.혈압수축기} — 높음.</div>}
             {parseInt(form.혈당)>=126 && <div className="alert alert-amber" style={{marginTop:12}}>⚠ 혈당 {form.혈당} — 주의 수치.</div>}
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('detail')}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>updateState({tab:'detail'})}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
