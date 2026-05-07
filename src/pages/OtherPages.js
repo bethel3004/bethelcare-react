@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getHashParams, pushHashParams } from '../utils/urlParams';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 
@@ -26,7 +27,7 @@ export function Consult({ db }) {
     e.preventDefault();
     setConsults(consults.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
     if (editForm._rowIndex) updateSheet('상담내역', editForm._rowIndex, editForm);
-    setEditTarget(null); setEditForm(null); setTab('list');
+    setEditTarget(null); setEditForm(null); updateState({tab:'list'});
   };
 
   const handleAdd = (e) => {
@@ -37,7 +38,7 @@ export function Consult({ db }) {
     const newConsult = { ...form, ID:newId, 입소자ID:p?.ID||'' };
     setConsults([...consults, newConsult]);
     appendToSheet('상담내역', newConsult);
-    setTab('list');
+    updateState({tab:'list'});
   };
 
   return (
@@ -45,20 +46,20 @@ export function Consult({ db }) {
       <div className="page-header"><h1>상담 일지</h1><p>날짜별 상담 기록 관리</p></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:20}}>
         <div className="tabs">
-          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>기록 조회</button>
-          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>상담 기록 입력</button>}
-          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>setTab('edit')}>✏️ 수정</button>}
+          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>updateState({tab:'list'})}>기록 조회</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>updateState({tab:'add'})}>상담 기록 입력</button>}
+          {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>updateState({tab:'edit'})}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input className="form-input" style={{width:180}} placeholder="🔍 이름·내용 검색..."
-              value={search} onChange={e=>{setSearch(e.target.value);setSel('전체');}}/>
+              value={search} onChange={e=>{updateState({search: e.target.value, sel:'전체'});}}/>
             <select className="form-select" style={{width:140}} value={sel}
-              onChange={e=>{setSel(e.target.value);setSearch('');}}>
+              onChange={e=>{setSel(e.target.value);updateState({search:''});}}>
               <option value="전체">전체</option>
               {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
             </select>
-            {search && <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕</button>}
+            {search && <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕</button>}
           </div>
         )}
       </div>
@@ -87,7 +88,7 @@ export function Consult({ db }) {
                   </div>
                 )}
                 {r.비고 && <div style={{marginTop:8,fontSize:'0.75rem',color:'var(--text3)',background:'var(--bg)',padding:'6px 10px',borderRadius:6}}>{r.비고}</div>}
-                {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});setTab('edit');}}>✏️ 수정</button></div>}
+                {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});updateState({tab:'edit'});}}>✏️ 수정</button></div>}
               </div>
             ))}
           </>
@@ -95,7 +96,7 @@ export function Consult({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editTarget?.성명} 상담 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'list'});}}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEditConsult}>
             <div className="form-grid form-grid-2">
@@ -107,7 +108,7 @@ export function Consult({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('변화')}/></div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'list'});}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -130,7 +131,7 @@ export function Consult({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="긍정적 변화, 생활 권고 사항" {...f('변화')}/></div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('list')}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>updateState({tab:'list'})}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -166,7 +167,7 @@ export function Groups({ db }) {
     setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
     setSelected([]);
-    setTab('list');
+    updateTab('list');
   };
 
   const handleEditGroup = (e) => {
@@ -175,7 +176,7 @@ export function Groups({ db }) {
     const updatedGroup = { ...editGroup, 멤버IDs: editSelected.join(',') };
     setGroups(groups.map(g => (g._rowIndex && g._rowIndex === editGroup._rowIndex) || (g.ID && g.ID === editGroup.ID) || g === editGroup ? updatedGroup : g));
     if (updatedGroup._rowIndex) updateSheet('기수행사', updatedGroup._rowIndex, updatedGroup);
-    setEditGroup(null); setEditSelected([]); setTab('list');
+    setEditGroup(null); setEditSelected([]); updateTab('list');
   };
 
   const getMembers = (g) => {
@@ -218,9 +219,9 @@ export function Groups({ db }) {
       <div className="page-header"><h1>기수·행사 관리</h1><p>프로그램 기수별 입소자 분류</p></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:20}}>
         <div className="tabs">
-          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
-          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>}
-          {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>setTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
+          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>updateTab('list')}>목록</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);updateTab('add');}}>새 기수·행사 등록</button>}
+          {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>updateTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
         </div>
       </div>
 
@@ -253,7 +254,7 @@ export function Groups({ db }) {
                           {members.map(p=>p.성명).join(', ')}
                         </div>
                       )}
-                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=> x._rowIndex ? x._rowIndex !== g._rowIndex : (x.ID ? x.ID !== g.ID : x !== g))); }}>삭제</button></div>}
+                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);updateTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=> x._rowIndex ? x._rowIndex !== g._rowIndex : (x.ID ? x.ID !== g.ID : x !== g))); }}>삭제</button></div>}
                     </div>
                   </div>
                 );
@@ -284,7 +285,7 @@ export function Groups({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editGroup.그룹명} 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditGroup(null);setEditSelected([]);updateTab('list');}}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEditGroup}>
             <div className="form-grid form-grid-2">
@@ -303,7 +304,7 @@ export function Groups({ db }) {
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
             <CheckboxGrid selState={editSelected} setSel={setEditSelected}/>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);updateTab('list');}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -326,7 +327,7 @@ export function Groups({ db }) {
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
             <CheckboxGrid selState={selected} setSel={setSelected}/>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setSelected([]);setTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setSelected([]);updateTab('list');}}>취소</button>
               <button type="submit" className="btn btn-primary">✅ 등록하기</button>
             </div>
           </form>
@@ -339,9 +340,27 @@ export function Groups({ db }) {
 
 export function Stats({ db }) {
   const { patients, bp, inbody, isGuest } = db;
-  const [search, setSearch] = useState('');
-  const [selPatient, setSelPatient] = useState('전체');
-  const [bpSearch, setBpSearch] = useState('');
+  const initS = () => { const p = getHashParams(); return { search: p.search||'', selPatient: p.patient||'전체', bpSearch: p.bpSearch||'' }; };
+  const [statsState, setStatsState] = useState(initS);
+  const { search, selPatient, bpSearch } = statsState;
+
+  const updateStats = useCallback((next) => {
+    setStatsState(prev => {
+      const merged = { ...prev, ...next };
+      pushHashParams('stats', { search: merged.search, patient: merged.selPatient, bpSearch: merged.bpSearch });
+      return merged;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.hash.startsWith('#stats')) return;
+      const p = getHashParams();
+      setStatsState({ search: p.search||'', selPatient: p.patient||'전체', bpSearch: p.bpSearch||'' });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // 질환 분포
   const keywords = ['고혈압','당뇨','암','대사증후군','고지혈','협착','골다공','불면','갑상선','통풍','간염','뇌경색','부정맥'];
@@ -454,7 +473,7 @@ export function Stats({ db }) {
             <input className="form-input" style={{width:140}} placeholder="🔍 이름 검색..."
               value={bpSearch}
               onChange={e=>{
-                setBpSearch(e.target.value);
+                updateStats({bpSearch: e.target.value});
                 const found = patients.find(p=>p.성명===e.target.value);
                 if(found) setSelPatient(found.성명);
                 else if(!e.target.value) setSelPatient('전체');
@@ -467,7 +486,7 @@ export function Stats({ db }) {
               ))}
             </datalist>
             <select className="form-select" style={{width:140}} value={selPatient}
-              onChange={e=>{setSelPatient(e.target.value);setBpSearch(e.target.value==='전체'?'':e.target.value);}}>
+              onChange={e=>{updateStats({selPatient: e.target.value});setBpSearch(e.target.value==='전체'?'':e.target.value);}}>
               <option value="전체">전체 선택</option>
               {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
             </select>
@@ -501,7 +520,7 @@ export function Stats({ db }) {
         <div className="card-header">
           <span className="card-title">인바디 점수 Before → After</span>
           <input className="form-input" style={{width:160}} placeholder="🔍 이름 검색..."
-            value={search} onChange={e=>setSearch(e.target.value)}/>
+            value={search} onChange={e=>updateStats({search: e.target.value})}/>
         </div>
         <div style={{padding:'12px 8px'}}>
           {filteredIb.length > 0 && filteredIb.some(r=>r.before!==r.after) && (
