@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getHashParams, pushHashParams } from '../utils/urlParams';
 import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function Inbody({ db }) {
   const { patients, inbody, setInbody, isGuest, reloadSheets } = db;
-  const [tab, setTab] = useState('compare');
+  const initState = () => { const p = getHashParams(); return { tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체' }; };
+  const [urlState, setUrlState] = useState(initState);
+  const { tab, search, sel } = urlState;
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
-  const [search, setSearch] = useState('');
-  const [sel, setSel] = useState('전체');
+
+  const updateState = useCallback((next) => {
+    setUrlState(prev => {
+      const merged = { ...prev, ...next };
+      pushHashParams('inbody', { tab: merged.tab, search: merged.search, patient: merged.sel });
+      return merged;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.hash.startsWith('#inbody')) return;
+      const p = getHashParams();
+      setUrlState({ tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체' });
+      setEditTarget(null); setEditForm(null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const [form, setForm] = useState({
     성명:'', 날짜:'', 구분:'입소 전', 점수:'', 신체나이:'',
     기초대사량:'', 체수분:'', 단백질:'', 무기질:'', 체지방:'',
@@ -58,7 +78,7 @@ export default function Inbody({ db }) {
     e.preventDefault();
     setInbody(inbody.map(r => (r._rowIndex && r._rowIndex === editTarget._rowIndex) || (r.ID && r.ID === editTarget.ID) || r === editTarget ? { ...editForm } : r));
     if (editForm._rowIndex) updateSheet('인바디', editForm._rowIndex, editForm);
-    setEditTarget(null); setEditForm(null); setTab('compare');
+    setEditTarget(null); setEditForm(null); updateState({tab:'compare'});
   };
 
   const handleAdd = (e) => {
@@ -70,7 +90,7 @@ export default function Inbody({ db }) {
     setInbody([...inbody, newIb]);
     setTimeout(() => reloadSheets && reloadSheets(), 1000);
     appendToSheet('인바디', newIb);
-    setTab('compare'); setSel(form.성명);
+    updateState({tab:'compare'}); updateState({sel: form.성명});
   };
 
   return (
@@ -82,8 +102,8 @@ export default function Inbody({ db }) {
 
       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
         <div className="tabs">
-          <button className={`tab ${tab==='compare'?'active':''}`} onClick={()=>setTab('compare')}>Before &amp; After</button>
-          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>setTab('add')}>측정 기록 입력</button>}
+          <button className={`tab ${tab==='compare'?'active':''}`} onClick={()=>updateState({tab:'compare'})}>Before &amp; After</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>updateState({tab:'add'})}>측정 기록 입력</button>}
         </div>
         {tab==='compare' && (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -92,10 +112,10 @@ export default function Inbody({ db }) {
               style={{width:200}}
               placeholder="🔍 이름 검색..."
               value={search}
-              onChange={e=>{setSearch(e.target.value);setSel('전체');}}
+              onChange={e=>{updateState({search: e.target.value, sel:'전체'});}}
             />
             {search && (
-              <button className="btn btn-ghost btn-sm" onClick={()=>setSearch('')}>✕ 초기화</button>
+              <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕ 초기화</button>
             )}
           </div>
         )}
@@ -230,7 +250,7 @@ export default function Inbody({ db }) {
                           권고: getField(r,'권고','권고 요약'),
                           성명: getName(r),
                         };
-                        setEditTarget(normalized); setEditForm(normalized); setTab('edit');
+                        setEditTarget(normalized); setEditForm(normalized); updateState({tab:'edit'});
                       }}>✏️ 수정</button>
                     </div>
                   )}
@@ -241,7 +261,7 @@ export default function Inbody({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editTarget?.성명} 인바디 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('compare');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'compare'});}}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEdit}>
             <div className="form-grid form-grid-2">
@@ -265,7 +285,7 @@ export default function Inbody({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" rows={6} style={{minHeight:240,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('권고')}/></div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);setTab('compare');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'compare'});}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -300,7 +320,7 @@ export default function Inbody({ db }) {
               <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">권고사항</label><textarea className="form-textarea" rows={6} style={{minHeight:240,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...f('권고')}/></div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>setTab('compare')}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>updateState({tab:'compare'})}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
