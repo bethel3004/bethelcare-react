@@ -20,7 +20,8 @@ export default function App() {
     sessionStorage.getItem('bethelcare_role') || 'admin'
   );
   const getPageFromUrl = () => {
-    const hash = window.location.hash.replace('#', '');
+    // ?파라미터 제거 후 페이지명만 추출 (예: #bp_sugar?status=입소중 → bp_sugar)
+    const hash = window.location.hash.replace('#', '').split('?')[0];
     const valid = ['dashboard','patients','bp_sugar','inbody','consult','groups','stats'];
     return valid.includes(hash) ? hash : 'dashboard';
   };
