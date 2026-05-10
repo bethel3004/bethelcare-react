@@ -6,9 +6,32 @@ import { appendToSheet, updateSheet, deleteFromSheet } from '../utils/sheets';
 // ══ 상담일지 ══
 export function Consult({ db }) {
   const { patients, consults, setConsults, isGuest, reloadSheets } = db;
-  const [tab, setTab] = useState('list');
-  const [search, setSearch] = useState('');
-  const [sel, setSel] = useState('전체');
+
+  const initC = () => {
+    const p = getHashParams();
+    return { tab: p.tab||'list', search: p.search||'', sel: p.patient||'전체', statusFilter: p.status||'전체', campFilter: p.camp||'전체' };
+  };
+  const [urlState, setUrlState] = useState(initC);
+  const { tab, search, sel, statusFilter, campFilter } = urlState;
+
+  const updateState = useCallback((next) => {
+    setUrlState(prev => {
+      const merged = { ...prev, ...next };
+      pushHashParams('consult', { tab: merged.tab, search: merged.search, patient: merged.sel, status: merged.statusFilter, camp: merged.campFilter });
+      return merged;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.hash.startsWith('#consult')) return;
+      const p = getHashParams();
+      setUrlState({ tab: p.tab||'list', search: p.search||'', sel: p.patient||'전체', statusFilter: p.status||'전체', campFilter: p.camp||'전체' });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   const [form, setForm] = useState({ 성명:'', 날짜:'', 상담자:'', 증세:'', 변화:'', 비고:'' });
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
