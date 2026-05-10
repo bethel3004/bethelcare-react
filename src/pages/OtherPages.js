@@ -11,10 +11,16 @@ export function Consult({ db }) {
   const [sel, setSel] = useState('전체');
   const [form, setForm] = useState({ 성명:'', 날짜:'', 상담자:'', 증세:'', 변화:'', 비고:'' });
 
+  const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
+
   const filtered = consults.filter(r => {
     const name = r.성명||'';
     if (sel !== '전체') return name === sel;
-    if (search) return name.includes(search) || (r.증세||'').includes(search) || (r.변화||'').includes(search);
+    if (search && !name.includes(search) && !(r.증세||'').includes(search) && !(r.변화||'').includes(search)) return false;
+    const patient = patients.find(p => p.성명 === name);
+    if (statusFilter === '입소중' && patient?.상태 !== '입소중') return false;
+    if (statusFilter === '퇴소'   && patient?.상태 !== '퇴소')   return false;
+    if (campFilter !== '전체' && patient?.캠프장소 !== campFilter) return false;
     return true;
   });
 
@@ -51,15 +57,22 @@ export function Consult({ db }) {
           {editTarget && <button className={`tab ${tab==='edit'?'active':''}`} onClick={()=>updateState({tab:'edit'})}>✏️ 수정</button>}
         </div>
         {tab==='list' && (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <input className="form-input" style={{width:180}} placeholder="🔍 이름·내용 검색..."
-              value={search} onChange={e=>{updateState({search: e.target.value, sel:'전체'});}}/>
-            <select className="form-select" style={{width:140}} value={sel}
-              onChange={e=>{setSel(e.target.value);updateState({search:''});}}>
-              <option value="전체">전체</option>
-              {patients.map(p=><option key={p.ID}>{p.성명}</option>)}
-            </select>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:4}}>
+            <input className="form-input" style={{maxWidth:180}} placeholder="🔍 이름·내용 검색..."
+              value={search} onChange={e=>updateState({search: e.target.value, sel:'전체'})}/>
             {search && <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕</button>}
+            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+              {['전체','입소중','퇴소'].map(s => (
+                <button key={s}
+                  className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                  onClick={()=>updateState({statusFilter:s})}>{s}</button>
+              ))}
+            </div>
+            <select value={campFilter} onChange={e=>updateState({campFilter:e.target.value})}
+              className="form-select" style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:120}}>
+              <option value="전체">캠프장소 전체</option>
+              {campList.filter(c=>c!=='전체').map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
         )}
       </div>
