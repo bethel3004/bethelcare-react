@@ -54,11 +54,13 @@ export default function Inbody({ db }) {
     const name = getName(r);
     if (sel !== '전체') return name === sel;
     if (search && !name.includes(search)) return false;
-    // 환자 정보로 상태/캠프 필터
-    const patient = patients.find(p => p.성명 === name);
-    if (statusFilter === '입소중' && patient?.상태 !== '입소중') return false;
-    if (statusFilter === '퇴소'   && patient?.상태 !== '퇴소')   return false;
-    if (campFilter !== '전체' && patient?.캠프장소 !== campFilter) return false;
+    // 환자 정보로 상태/캠프 필터 (이름 앞뒤 공백 무시, 못 찾으면 통과)
+    const patient = patients.find(p => p.성명?.trim() === name?.trim());
+    if (patient) {
+      if (statusFilter === '입소중' && patient.상태 !== '입소중') return false;
+      if (statusFilter === '퇴소'   && patient.상태 !== '퇴소')   return false;
+      if (campFilter !== '전체' && patient.캠프장소 !== campFilter) return false;
+    }
     return true;
   });
 
