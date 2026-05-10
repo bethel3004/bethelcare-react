@@ -4,16 +4,16 @@ import { appendToSheet, updateSheet } from '../utils/sheets';
 
 export default function Inbody({ db }) {
   const { patients, inbody, setInbody, isGuest, reloadSheets } = db;
-  const initState = () => { const p = getHashParams(); return { tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체' }; };
+  const initState = () => { const p = getHashParams(); return { tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체', statusFilter: p.status||'전체', campFilter: p.camp||'전체' }; };
   const [urlState, setUrlState] = useState(initState);
-  const { tab, search, sel } = urlState;
+  const { tab, search, sel, statusFilter, campFilter } = urlState;
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
 
   const updateState = useCallback((next) => {
     setUrlState(prev => {
       const merged = { ...prev, ...next };
-      pushHashParams('inbody', { tab: merged.tab, search: merged.search, patient: merged.sel });
+      pushHashParams('inbody', { tab: merged.tab, search: merged.search, patient: merged.sel, status: merged.statusFilter, camp: merged.campFilter });
       return merged;
     });
   }, []);
@@ -22,7 +22,7 @@ export default function Inbody({ db }) {
     const onPop = () => {
       if (!window.location.hash.startsWith('#inbody')) return;
       const p = getHashParams();
-      setUrlState({ tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체' });
+      setUrlState({ tab: p.tab||'compare', search: p.search||'', sel: p.patient||'전체', statusFilter: p.status||'전체', campFilter: p.camp||'전체' });
       setEditTarget(null); setEditForm(null);
     };
     window.addEventListener('popstate', onPop);
@@ -48,9 +48,17 @@ export default function Inbody({ db }) {
   const getAgeA    = r => getField(r, 'After 신체나이', '신체나이');
   const getAdvice  = r => getField(r, '권고', '권고 요약');
 
+  const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
+
   const filtered = inbody.filter(r => {
-    if (sel !== '전체') return getName(r) === sel;
-    if (search) return (getName(r)||'').includes(search);
+    const name = getName(r);
+    if (sel !== '전체') return name === sel;
+    if (search && !name.includes(search)) return false;
+    // 환자 정보로 상태/캠프 필터
+    const patient = patients.find(p => p.성명 === name);
+    if (statusFilter === '입소중' && patient?.상태 !== '입소중') return false;
+    if (statusFilter === '퇴소'   && patient?.상태 !== '퇴소')   return false;
+    if (campFilter !== '전체' && patient?.캠프장소 !== campFilter) return false;
     return true;
   });
 
@@ -100,26 +108,33 @@ export default function Inbody({ db }) {
         <p>Before &amp; After 비교 분석</p>
       </div>
 
-      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,flexWrap:'wrap',gap:8}}>
         <div className="tabs">
           <button className={`tab ${tab==='compare'?'active':''}`} onClick={()=>updateState({tab:'compare'})}>Before &amp; After</button>
           {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>updateState({tab:'add'})}>측정 기록 입력</button>}
         </div>
-        {tab==='compare' && (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <input
-              className="form-input"
-              style={{width:200}}
-              placeholder="🔍 이름 검색..."
-              value={search}
-              onChange={e=>{updateState({search: e.target.value, sel:'전체'});}}
-            />
-            {search && (
-              <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕ 초기화</button>
-            )}
-          </div>
-        )}
       </div>
+      {tab==='compare' && (
+        <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
+          <input className="form-input" style={{maxWidth:180}} placeholder="🔍 이름 검색..."
+            value={search} onChange={e=>updateState({search: e.target.value, sel:'전체'})}/>
+          {search && <button className="btn btn-ghost btn-sm" onClick={()=>updateState({search:''})}>✕</button>}
+          <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+            {['전체','입소중','퇴소'].map(s => (
+              <button key={s}
+                className={statusFilter===s?'btn btn-primary btn-sm':'btn btn-ghost btn-sm'}
+                onClick={()=>updateState({statusFilter:s})}>
+                {s}
+              </button>
+            ))}
+          </div>
+          <select value={campFilter} onChange={e=>updateState({campFilter:e.target.value})}
+            className="form-select" style={{height:32,padding:'0 8px',fontSize:'0.85rem',minWidth:120}}>
+            <option value="전체">캠프장소 전체</option>
+            {campList.filter(c=>c!=='전체').map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      )}
 
       {tab === 'compare' ? (
         names.length === 0
