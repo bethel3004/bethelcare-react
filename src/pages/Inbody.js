@@ -39,7 +39,13 @@ export default function Inbody({ db }) {
     for (const k of keys) if (r[k] !== undefined && r[k] !== '') return r[k];
     return '';
   };
-  const getName    = r => getField(r, '성명');
+  // 성명 필드가 없으면 입소자ID로 환자 테이블에서 이름 찾기
+  const getName = r => {
+    const byField = getField(r, '성명', '이름', '환자명', '참가자');
+    if (byField) return byField;
+    const byId = patients.find(p => p.ID && (p.ID === r['입소자ID'] || p.ID === r['입소자 ID'] || p.ID === r['ID']));
+    return byId?.성명 || '';
+  };
   const getScore   = r => getField(r, '점수', 'Before 점수', 'After 점수');
   const getAge     = r => getField(r, '신체나이', 'Before 신체나이', 'After 신체나이');
   const getScoreB  = r => getField(r, 'Before 점수', '점수');
@@ -50,32 +56,31 @@ export default function Inbody({ db }) {
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
-  // 상태/캠프 필터가 있을 때만 validNames 계산
-  const hasFilter = statusFilter !== '전체' || campFilter !== '전체';
-  const validNames = hasFilter ? new Set(
-    patients
-      .filter(p => {
-        if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
-        if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
-        return true;
-      })
-      .map(p => (p.성명||'').trim())
-      .filter(Boolean)
-  ) : null;
-
-  const filtered = inbody.filter(r => {
-    const name = (getName(r)||'').trim();
-    // 특정 환자 선택
-    if (sel !== '전체') return name === sel.trim();
-    // 이름 검색
-    if (search && !name.includes(search)) return false;
-    // 상태/캠프 필터 (필터 없으면 전부 통과)
-    if (hasFilter && name) return validNames.has(name);
+  // 1단계: 환자 기준으로 먼저 필터링 (환자 테이블에 상태/캠프 정보가 있음)
+  const filteredPatients = patients.filter(p => {
+    if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
+    if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
+    if (search && !(p.성명||'').includes(search)) return false;
     return true;
   });
+  const filteredPatientNames = new Set(filteredPatients.map(p => (p.성명||'').trim()).filter(Boolean));
 
-  // 성명 기준으로 그룹핑
-  const names = [...new Set(filtered.map(r => getName(r)).filter(Boolean))];
+  // 2단계: 선택된 환자/검색에 맞는 인바디 기록 필터
+  const filtered = inbody.filter(r => {
+    const name = (getName(r)||'').trim();
+    if (sel !== '전체') return name === sel.trim();
+    // 필터가 없으면 전부 표시
+    if (statusFilter === '전체' && campFilter === '전체' && !search) return true;
+    // 필터가 있으면 filteredPatients 기준으로 체크
+    return name ? filteredPatientNames.has(name) : false;
+  });
+
+  // 필터된 환자 순서대로 이름 목록 (기록 있는 환자만)
+  const names = sel !== '전체'
+    ? [sel].filter(n => inbody.some(r => (getName(r)||'').trim() === n))
+    : filteredPatients
+        .map(p => (p.성명||'').trim())
+        .filter(n => n && filtered.some(r => (getName(r)||'').trim() === n));
 
   const f = k => ({ value: form[k], onChange: e => setForm({ ...form, [k]: e.target.value }) });
 
