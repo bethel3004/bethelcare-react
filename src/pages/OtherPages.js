@@ -205,7 +205,7 @@ export function Groups({ db }) {
     setTimeout(() => reloadSheets && reloadSheets(), 1000);
     setForm({ 그룹명:'', 유형:'정기 기수', 시작일:'', 종료일:'', 설명:'' });
     setSelected([]);
-    updateTab('list');
+    setTab('list');
   };
 
   const handleEditGroup = (e) => {
@@ -214,7 +214,7 @@ export function Groups({ db }) {
     const updatedGroup = { ...editGroup, 멤버IDs: editSelected.join(',') };
     setGroups(groups.map(g => (g._rowIndex && g._rowIndex === editGroup._rowIndex) || (g.ID && g.ID === editGroup.ID) || g === editGroup ? updatedGroup : g));
     if (updatedGroup._rowIndex) updateSheet('기수행사', updatedGroup._rowIndex, updatedGroup);
-    setEditGroup(null); setEditSelected([]); updateTab('list');
+    setEditGroup(null); setEditSelected([]); setTab('list');
   };
 
   const getMembers = (g) => {
@@ -257,9 +257,9 @@ export function Groups({ db }) {
       <div className="page-header"><h1>기수·행사 관리</h1><p>프로그램 기수별 입소자 분류</p></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:20}}>
         <div className="tabs">
-          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>updateTab('list')}>목록</button>
-          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);updateTab('add');}}>새 기수·행사 등록</button>}
-          {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>updateTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
+          <button className={`tab ${tab==='list'?'active':''}`} onClick={()=>setTab('list')}>목록</button>
+          {!isGuest && <button className={`tab ${tab==='add'?'active':''}`} onClick={()=>{setSelected([]);setTab('add');}}>새 기수·행사 등록</button>}
+          {editGroup && <button className={`tab ${tab==='editGroup'?'active':''}`} onClick={()=>setTab('editGroup')}>✏️ {editGroup.그룹명} 수정</button>}
         </div>
       </div>
 
@@ -292,7 +292,7 @@ export function Groups({ db }) {
                           {members.map(p=>p.성명).join(', ')}
                         </div>
                       )}
-                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);updateTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=> x._rowIndex ? x._rowIndex !== g._rowIndex : (x.ID ? x.ID !== g.ID : x !== g))); }}>삭제</button></div>}
+                      {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',gap:6}}><button className="btn btn-ghost btn-sm" onClick={()=>{const ids=(g.멤버IDs||'').split(',').map(x=>x.trim()).filter(Boolean);setEditGroup({...g});setEditSelected(ids);setTab('editGroup');}}>✏️ 수정</button><button className="btn btn-danger btn-sm" onClick={()=>{ if(g._rowIndex) deleteFromSheet('기수행사', g._rowIndex); setGroups(groups.filter(x=> x._rowIndex ? x._rowIndex !== g._rowIndex : (x.ID ? x.ID !== g.ID : x !== g))); }}>삭제</button></div>}
                     </div>
                   </div>
                 );
@@ -323,7 +323,7 @@ export function Groups({ db }) {
         <div className="card">
           <div className="card-header">
             <span className="card-title">✏️ {editGroup.그룹명} 수정</span>
-            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditGroup(null);setEditSelected([]);updateTab('list');}}>취소</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
           </div>
           <form className="card-body" onSubmit={handleEditGroup}>
             <div className="form-grid form-grid-2">
@@ -342,7 +342,7 @@ export function Groups({ db }) {
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
             <CheckboxGrid selState={editSelected} setSel={setEditSelected}/>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);updateTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setEditGroup(null);setEditSelected([]);setTab('list');}}>취소</button>
               <button type="submit" className="btn btn-primary">💾 저장하기</button>
             </div>
           </form>
@@ -365,7 +365,7 @@ export function Groups({ db }) {
             <div className="section-label" style={{marginTop:16}}>소속 입소자 선택</div>
             <CheckboxGrid selState={selected} setSel={setSelected}/>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={()=>{setSelected([]);updateTab('list');}}>취소</button>
+              <button type="button" className="btn btn-ghost" onClick={()=>{setSelected([]);setTab('list');}}>취소</button>
               <button type="submit" className="btn btn-primary">✅ 등록하기</button>
             </div>
           </form>
