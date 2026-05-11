@@ -19,6 +19,7 @@ export default function App() {
   const [role, setRole] = useState(
     sessionStorage.getItem('bethelcare_role') || 'admin'
   );
+  const currentCamp = sessionStorage.getItem('bethelcare_camp') || '';
   const getPageFromUrl = () => {
     // ?파라미터 제거 후 페이지명만 추출 (예: #bp_sugar?status=입소중 → bp_sugar)
     const hash = window.location.hash.replace('#', '').split('?')[0];
@@ -95,8 +96,32 @@ export default function App() {
     window.location.reload();
   }} />;
 
-  const isGuest = role === 'guest';
-  const db = { role, isGuest, patients, setPatients, bp, setBp, inbody, setInbody, consults, setConsults, groups, setGroups, reloadSheets };
+  const isGuest = role === 'guest' || role === 'campGuest';
+  const isCampGuest = role === 'campGuest';
+
+  // 캠프 게스트: 해당 캠프 환자 데이터만 필터링
+  const visiblePatients = isCampGuest
+    ? patients.filter(p => (p.캠프장소 || '').trim() === currentCamp.trim())
+    : patients;
+  const campNames = isCampGuest
+    ? new Set(visiblePatients.map(p => (p.성명 || '').trim()))
+    : null;
+  const filterByCamp = arr => (isCampGuest && campNames)
+    ? arr.filter(r => {
+        const name = (r.성명 || '').trim();
+        return campNames.has(name);
+      })
+    : arr;
+
+  const db = {
+    role, isGuest, isCampGuest, currentCamp,
+    patients: visiblePatients, setPatients,
+    bp: filterByCamp(bp), setBp,
+    inbody: filterByCamp(inbody), setInbody,
+    consults: filterByCamp(consults), setConsults,
+    groups, setGroups,
+    reloadSheets
+  };
 
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
