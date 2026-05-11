@@ -36,26 +36,23 @@ export function Consult({ db }) {
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
-  // 상태/캠프 필터에 맞는 환자 이름 집합을 먼저 계산
-  const validNames = new Set(
+  const hasFilter = statusFilter !== '전체' || campFilter !== '전체';
+  const validNames = hasFilter ? new Set(
     patients
       .filter(p => {
-        if (statusFilter !== '전체' && p.상태?.trim() !== statusFilter) return false;
-        if (campFilter !== '전체' && p.캠프장소?.trim() !== campFilter) return false;
+        if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
+        if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
         return true;
       })
-      .map(p => p.성명?.trim())
-  );
+      .map(p => (p.성명||'').trim())
+      .filter(Boolean)
+  ) : null;
 
   const filtered = consults.filter(r => {
     const name = (r.성명||'').trim();
-    if (!name) return false;
     if (sel !== '전체') return name === sel.trim();
     if (search && !name.includes(search) && !(r.증세||'').includes(search) && !(r.변화||'').includes(search)) return false;
-    // 상태/캠프 필터가 활성화된 경우만 이름 집합으로 체크
-    if (statusFilter !== '전체' || campFilter !== '전체') {
-      return validNames.has(name);
-    }
+    if (hasFilter && name) return validNames.has(name);
     return true;
   });
 
