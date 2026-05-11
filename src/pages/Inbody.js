@@ -421,7 +421,7 @@ export default function Inbody({ db }) {
                     }}>
                       <div style={{textAlign:'center'}}>
                         <div style={{fontSize:'0.7rem', color:'var(--text3)', fontWeight:600, letterSpacing:'0.06em', marginBottom:6}}>
-                          입소 전{bf?.['측정일']?` (${bf['측정일']})`:''}</div>
+                          {getPhase(bf)||'1차'}{bf?.['측정일']?` (${bf['측정일']})`:''}</div>
                         <div style={{fontFamily:"'Cormorant Garamond',serif", fontSize:'3.5rem', fontWeight:300, color:scoreColor(bScore), lineHeight:1}}>{bScore??'-'}</div>
                         <div style={{fontSize:'0.72rem', color:'var(--text3)', marginTop:4}}>점 · 신체나이 {bAge??'-'}세</div>
                         {bf?.['체형판정']&&<div style={{fontSize:'0.68rem', color:'var(--text3)', marginTop:3}}>{bf['체형판정']}</div>}
@@ -430,7 +430,7 @@ export default function Inbody({ db }) {
                         <div style={{fontSize:'1.2rem', color:'var(--border)', opacity:0.4}}>→</div>
                         <div style={{textAlign:'center'}}>
                           <div style={{fontSize:'0.7rem', color:'var(--text3)', fontWeight:600, letterSpacing:'0.06em', marginBottom:6}}>
-                            입소 후{af?.['측정일']?` (${af['측정일']})`:''}</div>
+                            {getPhase(af)||'2차'}{af?.['측정일']?` (${af['측정일']})`:''}</div>
                           <div style={{fontFamily:"'Cormorant Garamond',serif", fontSize:'3.5rem', fontWeight:300, color:scoreColor(aScore), lineHeight:1}}>{aScore??'-'}</div>
                           <div style={{fontSize:'0.72rem', color:'var(--text3)', marginTop:4}}>점 · 신체나이 {aAge??'-'}세</div>
                           {af?.['체형판정']&&<div style={{fontSize:'0.68rem', color:'var(--text3)', marginTop:3}}>{af['체형판정']}</div>}
