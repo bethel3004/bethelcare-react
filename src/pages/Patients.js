@@ -157,7 +157,7 @@ export default function Patients({ db }) {
 
   const handleEdit = (e) => {
     e.preventDefault();
-    if (!editForm.성명 || !editForm.병명) return alert('성명과 병명은 필수입니다.');
+    if (!editForm.성명) return alert('성명은 필수입니다.');
     // admissions가 이미 전체 기간 목록 (기존 + 수정 포함) — 그대로 저장
     const 입소기간 = admissions.filter(a=>a.start&&a.end).map(a=>`${a.start} ~ ${a.end}`).join('\n');
     const updatedForm = { ...editForm, 입소기간 };
