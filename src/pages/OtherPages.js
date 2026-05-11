@@ -36,24 +36,24 @@ export function Consult({ db }) {
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
-  const hasFilter = statusFilter !== '전체' || campFilter !== '전체';
-  const validNames = hasFilter ? new Set(
-    patients
-      .filter(p => {
-        if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
-        if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
-        return true;
-      })
-      .map(p => (p.성명||'').trim())
-      .filter(Boolean)
-  ) : null;
+  // 환자 기준으로 먼저 필터링
+  const filteredPatients = patients.filter(p => {
+    if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
+    if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
+    if (search && !(p.성명||'').includes(search) && !(r => r)) return true;
+    return true;
+  });
+  const filteredPatientNames = new Set(filteredPatients.map(p => (p.성명||'').trim()).filter(Boolean));
 
   const filtered = consults.filter(r => {
-    const name = (r.성명||'').trim();
+    const name = (r.성명 || patients.find(p => p.ID === r['입소자ID'])?.성명 || '').trim();
     if (sel !== '전체') return name === sel.trim();
+    // 내용 검색
     if (search && !name.includes(search) && !(r.증세||'').includes(search) && !(r.변화||'').includes(search)) return false;
-    if (hasFilter && name) return validNames.has(name);
-    return true;
+    // 필터 없으면 전부 표시
+    if (statusFilter === '전체' && campFilter === '전체') return true;
+    // 필터 있으면 환자 기준으로 체크
+    return name ? filteredPatientNames.has(name) : false;
   });
 
   const [editTarget, setEditTarget] = useState(null);
