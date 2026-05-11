@@ -50,25 +50,27 @@ export default function Inbody({ db }) {
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
-  // 상태/캠프 필터에 맞는 환자 이름 집합을 먼저 계산
-  const validNames = new Set(
+  // 상태/캠프 필터가 있을 때만 validNames 계산
+  const hasFilter = statusFilter !== '전체' || campFilter !== '전체';
+  const validNames = hasFilter ? new Set(
     patients
       .filter(p => {
-        if (statusFilter !== '전체' && p.상태?.trim() !== statusFilter) return false;
-        if (campFilter !== '전체' && p.캠프장소?.trim() !== campFilter) return false;
+        if (statusFilter !== '전체' && (p.상태||'').trim() !== statusFilter) return false;
+        if (campFilter !== '전체' && (p.캠프장소||'').trim() !== campFilter) return false;
         return true;
       })
-      .map(p => p.성명?.trim())
-  );
+      .map(p => (p.성명||'').trim())
+      .filter(Boolean)
+  ) : null;
 
   const filtered = inbody.filter(r => {
     const name = (getName(r)||'').trim();
-    if (!name) return false;
+    // 특정 환자 선택
     if (sel !== '전체') return name === sel.trim();
+    // 이름 검색
     if (search && !name.includes(search)) return false;
-    if (statusFilter !== '전체' || campFilter !== '전체') {
-      return validNames.has(name);
-    }
+    // 상태/캠프 필터 (필터 없으면 전부 통과)
+    if (hasFilter && name) return validNames.has(name);
     return true;
   });
 
