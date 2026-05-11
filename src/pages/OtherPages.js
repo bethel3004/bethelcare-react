@@ -32,7 +32,7 @@ export function Consult({ db }) {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  const [form, setForm] = useState({ 성명:'', 날짜:'', 상담자:'', 증세:'', 변화:'', 비고:'' });
+  const [form, setForm] = useState({ 성명:'', 날짜:'', 상담자:'', 상담내역:'', 비고:'' });
 
   const campList = ['전체', ...[...new Set(patients.map(p => p.캠프장소).filter(Boolean))].sort()];
 
@@ -49,7 +49,8 @@ export function Consult({ db }) {
     const name = (r.성명 || patients.find(p => p.ID === r['입소자ID'])?.성명 || '').trim();
     if (sel !== '전체') return name === sel.trim();
     // 내용 검색
-    if (search && !name.includes(search) && !(r.증세||'').includes(search) && !(r.변화||'').includes(search)) return false;
+    const content = (r.상담내역 || [r.증세, r.변화].filter(Boolean).join(' ') || '');
+    if (search && !name.includes(search) && !content.includes(search)) return false;
     // 필터 없으면 전부 표시
     if (statusFilter === '전체' && campFilter === '전체') return true;
     // 필터 있으면 환자 기준으로 체크
@@ -120,18 +121,12 @@ export function Consult({ db }) {
                   📅 <b>{r.날짜}</b> · 상담자: <b>{r.상담자}</b> ·
                   <span style={{color:'var(--accent)',fontWeight:600,marginLeft:4}}>{r.성명}</span>
                 </div>
-                {(r.증세||r.변화) && (
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:8}}>
-                    {r.증세 && <div>
-                      <div style={{fontSize:'0.7rem',fontWeight:700,color:'var(--amber)',marginBottom:4,letterSpacing:'0.04em'}}>증 세</div>
-                      <div style={{fontSize:'0.8125rem',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{r.증세}</div>
-                    </div>}
-                    {r.변화 && <div>
-                      <div style={{fontSize:'0.7rem',fontWeight:700,color:'var(--accent)',marginBottom:4,letterSpacing:'0.04em'}}>변화 / 권고</div>
-                      <div style={{fontSize:'0.8125rem',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{r.변화}</div>
-                    </div>}
-                  </div>
-                )}
+                {(() => {
+                  const txt = r.상담내역 || [r.증세, r.변화].filter(Boolean).join('\n\n');
+                  return txt ? (
+                    <div style={{marginTop:8,fontSize:'0.8125rem',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{txt}</div>
+                  ) : null;
+                })()}
                 {r.비고 && <div style={{marginTop:8,fontSize:'0.75rem',color:'var(--text3)',background:'var(--bg)',padding:'6px 10px',borderRadius:6}}>{r.비고}</div>}
                 {!isGuest && <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}><button className="btn btn-ghost btn-sm" onClick={()=>{setEditTarget(r);setEditForm({...r});updateState({tab:'edit'});}}>✏️ 수정</button></div>}
               </div>
@@ -149,8 +144,7 @@ export function Consult({ db }) {
               <div className="form-group"><label className="form-label">상담일</label><input type="date" className="form-input" {...ef('날짜')}/></div>
               <div className="form-group"><label className="form-label">상담자</label><input className="form-input" {...ef('상담자')}/></div>
               <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...ef('비고')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('증세')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} {...ef('변화')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">상담내역</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} value={editForm?.상담내역 ?? [editForm?.증세, editForm?.변화].filter(Boolean).join('\n\n')} onChange={e=>setEditForm({...editForm,상담내역:e.target.value,증세:'',변화:''})}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>{setEditTarget(null);setEditForm(null);updateState({tab:'list'});}}>취소</button>
@@ -172,8 +166,7 @@ export function Consult({ db }) {
               <div className="form-group"><label className="form-label">상담일</label><input type="date" className="form-input" {...f('날짜')}/></div>
               <div className="form-group"><label className="form-label">상담자</label><input className="form-input" {...f('상담자')}/></div>
               <div className="form-group"><label className="form-label">비고</label><input className="form-input" {...f('비고')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">증세</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="현재 증세 및 호소 내용" {...f('증세')}/></div>
-              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">변화 / 권고</label><textarea className="form-textarea" rows={8} style={{minHeight:200,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="긍정적 변화, 생활 권고 사항" {...f('변화')}/></div>
+              <div className="form-group" style={{gridColumn:'1/-1'}}><label className="form-label">상담내역</label><textarea className="form-textarea" rows={14} style={{minHeight:320,whiteSpace:'pre-wrap',wordBreak:'break-word'}} placeholder="증세, 변화, 권고 사항 등 상담 내용을 자유롭게 기록하세요" {...f('상담내역')}/></div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={()=>updateState({tab:'list'})}>취소</button>
