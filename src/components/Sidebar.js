@@ -29,8 +29,14 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   const active = db.patients.filter(p => p.상태 === '입소중').length;
   const total  = db.patients.length;
   const role = db.role || 'admin';
-  const roleName = role === 'admin' ? '관리자' : role === 'staff' ? 'STAFF' : '게스트';
-  const roleColor = role === 'guest' ? '#8A6B4A' : role === 'staff' ? '#4A6B8A' : '#5C7A5F';
+  const roleName = role === 'admin' ? '관리자'
+    : role === 'staff' ? 'STAFF'
+    : role === 'campGuest' ? (db.currentCamp || '캠프')
+    : '게스트';
+  const roleColor = role === 'guest' ? '#8A6B4A'
+    : role === 'staff' ? '#4A6B8A'
+    : role === 'campGuest' ? '#6B4A8A'
+    : '#5C7A5F';
   const bp = useBreakpoint();
 
   // 모바일: 기본 닫힘, 태블릿: 항상 아이콘만, 데스크탑: open 상태 유지
@@ -173,6 +179,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         <button onClick={() => {
           sessionStorage.removeItem('bethelcare_auth');
           sessionStorage.removeItem('bethelcare_role');
+            sessionStorage.removeItem('bethelcare_camp');
           window.location.reload();
         }} style={{
           padding: '12px',
