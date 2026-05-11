@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 
 // 계정 설정 - 여기서 비밀번호 관리
+// ★ 캠프별 게스트 계정: camp 필드에 정확한 캠프장소명 입력
+//   (구글 시트 '입소자' 탭의 캠프장소 값과 일치해야 함)
 const ACCOUNTS = [
-  { id: 'admin',  pw: '@Matthew33',  role: 'admin',  name: '관리자' },
-  { id: 'staff',  pw: 'Bethel3004',  role: 'staff',  name: 'STAFF' },
-  { id: 'guest',  pw: 'guest0000',   role: 'guest',  name: '게스트' },
+  { id: 'admin',  pw: '@Matthew33',  role: 'admin',  name: '관리자',   camp: '' },
+  { id: 'staff',  pw: 'Bethel3004',  role: 'staff',  name: 'STAFF',    camp: '' },
+  { id: 'guest',  pw: 'guest0000',   role: 'guest',  name: '게스트',   camp: '' },
+
+  // ─── 캠프장소별 계정 ───────────────────────────────────────────────
+  // 비밀번호(pw)와 캠프명(camp)을 실제 값으로 수정해서 사용하세요
+   { id: 'camp_dongrae', pw: 'dr3004', role: 'campGuest', name: '부산동래교회', camp: '부산동래교회' },
+{ id: 'camp_jungang', pw: 'ja3004', role: 'campGuest', name: '부산중앙교회', camp: '부산중앙교회' },
 ];
 
 export default function Login({ onLogin }) {
@@ -19,6 +26,7 @@ export default function Login({ onLogin }) {
       sessionStorage.setItem('bethelcare_auth', 'true');
       sessionStorage.setItem('bethelcare_role', account.role);
       sessionStorage.setItem('bethelcare_name', account.name);
+      sessionStorage.setItem('bethelcare_camp', account.camp || '');
       onLogin(account.role);
     } else {
       setError(true);
