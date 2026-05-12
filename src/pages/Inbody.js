@@ -51,7 +51,6 @@ export default function Inbody({ db }) {
   const getPhase = r => String(g(r, '구분') || '').trim();
   const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
 
-  // 구분 → 차수 번호
   const phaseNum = r => {
     const d = getPhase(r).toLowerCase();
     if (d === '1차' || d.includes('before')) return 1;
@@ -96,7 +95,6 @@ export default function Inbody({ db }) {
   const f  = k => ({ value: form[k]||'',      onChange: e => setForm({...form, [k]:e.target.value}) });
   const ef = k => ({ value: editForm?.[k]||'', onChange: e => setEditForm({...editForm, [k]:e.target.value}) });
 
-  // 체성분 항목 [표시명, 키, 단위, 증가좋음(true)/감소좋음(false)/중립(null)]
   const ITEMS = [
     ['체중',         '체중(kg)',           'kg',   null],
     ['골격근량',     '골격근량(kg)',       'kg',   true],
@@ -139,53 +137,15 @@ export default function Inbody({ db }) {
     updateState({tab:'compare', sel:form.성명});
   };
 
-  // ── 다차수 비교 테이블 컴포넌트 ──────────────────────────────
+  // ── 다차수 비교 테이블 (점수 요약 카드 제거 — 위쪽 배너와 중복) ──
   const MultiCompare = ({ rows }) => {
-    // 차수 순 정렬
     const sorted = [...rows].sort((a,b) => phaseNum(a)-phaseNum(b));
     if (sorted.length < 2) return null;
-
-    const base = sorted[0]; // 1차 기준
 
     return (
       <div style={{marginBottom:12}}>
         <div style={{fontSize:'0.72rem', color:'var(--text3)', fontWeight:600, marginBottom:8, letterSpacing:'0.05em'}}>
           체성분 전체 비교 ({sorted.length}회 측정)
-        </div>
-
-        {/* 차수별 점수 요약 */}
-        <div style={{display:'flex', gap:8, marginBottom:12, flexWrap:'wrap'}}>
-          {sorted.map((r, i) => {
-            const sc = num(r['종합점수']||r['점수']);
-            const ag = num(r['신체연령'] ||r['신체나이']);
-            const prevSc = i>0 ? num(sorted[i-1]['종합점수']||sorted[i-1]['점수']) : null;
-            const diff = (sc!=null && prevSc!=null) ? sc-prevSc : null;
-            return (
-              <div key={i} style={{
-                flex:'1', minWidth:100, textAlign:'center',
-                background: i===0 ? '#eaf4fb' : i===1 ? '#eafaf1' : i===2 ? '#fef9e7' : '#f3f0ff',
-                borderRadius:12, padding:'12px 8px',
-                border:`1px solid ${i===0?'#aed6f1':i===1?'#a9dfbf':i===2?'#f9e79f':'#d7bde2'}`,
-              }}>
-                <div style={{fontSize:'0.68rem', color:'var(--text3)', fontWeight:600, marginBottom:4}}>
-                  {getPhase(r)}
-                  {r['측정일'] && <span style={{fontWeight:400, marginLeft:4}}>({r['측정일']})</span>}
-                </div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif", fontSize:'2.4rem', fontWeight:300, color:scoreColor(sc), lineHeight:1}}>
-                  {sc??'-'}
-                </div>
-                <div style={{fontSize:'0.7rem', color:'var(--text3)', marginTop:3}}>점 · {ag??'-'}세</div>
-                {diff!=null && (
-                  <div style={{fontSize:'0.7rem', marginTop:4, color:diff>=0?'#27ae60':'#e74c3c', fontWeight:600}}>
-                    {diff>=0?'▲':'▼'}{Math.abs(diff)}점
-                  </div>
-                )}
-                {r['체형판정'] && (
-                  <div style={{fontSize:'0.65rem', color:'var(--text3)', marginTop:3}}>{r['체형판정']}</div>
-                )}
-              </div>
-            );
-          })}
         </div>
 
         {/* 항목별 다차수 비교 표 */}
@@ -199,7 +159,6 @@ export default function Inbody({ db }) {
                     {getPhase(r)}
                   </th>
                 ))}
-                {/* 1차→최종 변화 */}
                 {sorted.length>=2 && (
                   <th style={{padding:'7px 10px', textAlign:'center', color:'var(--text3)', fontWeight:600, whiteSpace:'nowrap', borderBottom:'2px solid var(--border)', background:'#e8f5e9'}}>
                     총 변화
@@ -253,7 +212,7 @@ export default function Inbody({ db }) {
     );
   };
 
-  // ── 2차수 비교 (기존 Before/After) ───────────────────────────
+  // ── 2차수 비교 ────────────────────────────────────────────────
   const TwoCompare = ({ bf, af }) => (
     <div style={{marginBottom:12}}>
       <div style={{fontSize:'0.72rem', color:'var(--text3)', fontWeight:600, marginBottom:8, letterSpacing:'0.05em'}}>체성분 상세 비교</div>
@@ -327,7 +286,7 @@ export default function Inbody({ db }) {
 
             const bf = rows.find(r=>phaseNum(r)===1) || rows[0];
             const af = rows.find(r=>phaseNum(r)===2) || (rows.length>1?rows[1]:null);
-            const hasMulti = rows.length >= 3; // 3차 이상
+            const hasMulti = rows.length >= 3;
 
             const bScore = num(bf?.['종합점수']||bf?.['점수']);
             const aScore = af ? num(af['종합점수']||af['점수']) : null;
@@ -338,7 +297,6 @@ export default function Inbody({ db }) {
             const hasBoth = bScore!=null && aScore!=null;
             const camp   = getCamp(bf)||getCamp(af);
 
-            // 최고 점수 측정
             const bestRow = rows.reduce((best,r) => {
               const sc = num(r['종합점수']||r['점수']);
               if (sc==null) return best;
@@ -368,9 +326,8 @@ export default function Inbody({ db }) {
                 </div>
 
                 <div className="card-body">
-                  {/* 점수 배너 — 3차 이상이면 전체 차수 표시 */}
+                  {/* 점수 배너 */}
                   {hasMulti ? (
-                    // 3차 이상: 가로 스크롤 카드
                     <div style={{
                       display:'flex', gap:12, overflowX:'auto',
                       background:'linear-gradient(135deg,#F0F4F0,#F4F1EB)',
@@ -411,7 +368,6 @@ export default function Inbody({ db }) {
                       })}
                     </div>
                   ) : (
-                    // 1~2차: 기존 Before/After 배너
                     <div style={{
                       display:'grid', gridTemplateColumns:hasBoth?'1fr auto 1fr auto 1fr':'1fr',
                       gap:16, alignItems:'center',
@@ -446,7 +402,7 @@ export default function Inbody({ db }) {
                     </div>
                   )}
 
-                  {/* 체성분 비교 — 3차 이상이면 표, 2차면 기존 그리드 */}
+                  {/* 체성분 비교표 */}
                   {hasMulti
                     ? <MultiCompare rows={rows} />
                     : hasBoth && <TwoCompare bf={bf} af={af} />
@@ -464,7 +420,6 @@ export default function Inbody({ db }) {
             );
           })
 
-      /* ── EDIT ────────────────────────────────────────────── */
       ) : tab==='edit' && editForm ? (
         <div className="card">
           <div className="card-header">
@@ -500,7 +455,6 @@ export default function Inbody({ db }) {
           </form>
         </div>
 
-      /* ── ADD ─────────────────────────────────────────────── */
       ) : (
         <div className="card">
           <div className="card-header"><span className="card-title">인바디 측정 기록 입력</span></div>
