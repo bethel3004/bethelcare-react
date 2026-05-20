@@ -96,9 +96,13 @@ export default function App() {
   const isGuest = role === 'guest' || role === 'campGuest';
   const isCampGuest = role === 'campGuest';
 
+  const GUEST_CAMPS = ['부산동래교회', '부산중앙교회'];
+
   const visiblePatients = isCampGuest
     ? patients.filter(p => (p.캠프장소 || '').trim() === currentCamp.trim())
-    : patients;
+    : isGuest
+      ? patients.filter(p => GUEST_CAMPS.includes((p.캠프장소 || '').trim()))
+      : patients;
   const campNames = isCampGuest
     ? new Set(visiblePatients.map(p => (p.성명 || '').trim()))
     : null;
@@ -107,7 +111,9 @@ export default function App() {
         const name = (r.성명 || '').trim();
         return campNames.has(name);
       })
-    : arr;
+    : isGuest
+      ? arr.filter(r => GUEST_CAMPS.includes((r.캠프장소 || '').trim()))
+      : arr;
 
   const db = {
     role, isGuest, isCampGuest, currentCamp,
@@ -119,8 +125,9 @@ export default function App() {
     reloadSheets
   };
 
-  // ★ 게스트가 consult 페이지에 직접 접근하면 dashboard로 리다이렉트
-  const safePage = (isGuest && page === 'consult') ? 'dashboard' : page;
+  // ★ 게스트는 bp_sugar, inbody만 허용 — 그 외 접근 시 bp_sugar로 이동
+  const GUEST_ALLOWED = ['bp_sugar', 'inbody'];
+  const safePage = (isGuest && !GUEST_ALLOWED.includes(page)) ? 'bp_sugar' : page;
 
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
