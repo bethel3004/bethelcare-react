@@ -5,7 +5,7 @@ const MENU = [
   { id:'patients',  icon:'◉', label:'입소자 관리' },
   { id:'bp_sugar',  icon:'♥', label:'혈당·혈압' },
   { id:'inbody',    icon:'◎', label:'인바디 체성분' },
-  { id:'consult',   icon:'✦', label:'상담 일지' },
+  { id:'consult',   icon:'✦', label:'상담 일지', adminOnly: true },
   { id:'groups',    icon:'◆', label:'기수·행사' },
   { id:'stats',     icon:'◐', label:'통계·보고서' },
 ];
@@ -29,6 +29,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   const active = db.patients.filter(p => p.상태 === '입소중').length;
   const total  = db.patients.length;
   const role = db.role || 'admin';
+  const isGuest = role === 'guest' || role === 'campGuest';
   const roleName = role === 'admin' ? '관리자'
     : role === 'staff' ? 'STAFF'
     : role === 'campGuest' ? (db.currentCamp || '캠프')
@@ -39,7 +40,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     : '#5C7A5F';
   const bp = useBreakpoint();
 
-  // 모바일: 기본 닫힘, 태블릿: 항상 아이콘만, 데스크탑: open 상태 유지
   useEffect(() => {
     if (bp === 'mobile') setOpen(false);
     if (bp === 'tablet') setOpen(true);
@@ -47,9 +47,7 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
   }, [bp]);
 
   const isMobile = bp === 'mobile';
-  const isTablet = bp === 'tablet';
 
-  // 사이드바 너비 결정
   const sidebarWidth = isMobile ? '200px' : (open ? '200px' : '64px');
   const showLabel = isMobile ? true : open;
   const transform = isMobile && !open ? 'translateX(-100%)' : 'translateX(0)';
@@ -59,9 +57,11 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     if (isMobile) setOpen(false);
   };
 
+  // ★ 게스트면 adminOnly 메뉴 숨김
+  const visibleMenu = MENU.filter(m => !(m.adminOnly && isGuest));
+
   return (
     <>
-      {/* 모바일 오버레이 */}
       {isMobile && open && (
         <div onClick={() => setOpen(false)} style={{
           position: 'fixed', inset: 0,
@@ -70,7 +70,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         }}/>
       )}
 
-      {/* 모바일 햄버거 버튼 */}
       {isMobile && (
         <button onClick={() => setOpen(!open)} style={{
           position: 'fixed', top: 12, left: 12,
@@ -97,7 +96,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
         transform,
       }}>
 
-        {/* 로고 */}
         <div onClick={() => { setPage('dashboard'); if (isMobile) setOpen(false); }}
           style={{
             padding: showLabel ? '24px 20px 16px' : '20px 0',
@@ -117,7 +115,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           {showLabel && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>BethelCare</div>}
         </div>
 
-        {/* 입소 현황 - 라벨 있을 때만 */}
         {showLabel && (
           <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>현황</div>
@@ -135,9 +132,9 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           </div>
         )}
 
-        {/* 메뉴 */}
+        {/* 메뉴 — 게스트는 adminOnly 항목 제외 */}
         <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto' }}>
-          {MENU.map(m => {
+          {visibleMenu.map(m => {
             const isActive = page === m.id;
             return (
               <button key={m.id} onClick={() => handleMenuClick(m.id)} title={m.label} style={{
@@ -166,7 +163,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           })}
         </nav>
 
-        {/* 역할 배지 */}
         {showLabel && (
           <div style={{ padding: '8px 20px 4px' }}>
             <span style={{ fontSize: '0.7rem', background: roleColor, color: 'white', padding: '2px 10px', borderRadius: 20, fontWeight: 600 }}>
@@ -175,11 +171,10 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           </div>
         )}
 
-        {/* 로그아웃 */}
         <button onClick={() => {
           sessionStorage.removeItem('bethelcare_auth');
           sessionStorage.removeItem('bethelcare_role');
-            sessionStorage.removeItem('bethelcare_camp');
+          sessionStorage.removeItem('bethelcare_camp');
           window.location.reload();
         }} style={{
           padding: '12px',
@@ -197,7 +192,6 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
           {showLabel ? '로그아웃' : '↩'}
         </button>
 
-        {/* 데스크탑 토글 버튼 */}
         {!isMobile && (
           <button onClick={() => setOpen(!open)} style={{
             padding: '14px',
