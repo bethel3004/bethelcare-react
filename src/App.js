@@ -21,14 +21,12 @@ export default function App() {
   );
   const currentCamp = sessionStorage.getItem('bethelcare_camp') || '';
   const getPageFromUrl = () => {
-    // ?파라미터 제거 후 페이지명만 추출 (예: #bp_sugar?status=입소중 → bp_sugar)
     const hash = window.location.hash.replace('#', '').split('?')[0];
     const valid = ['dashboard','patients','bp_sugar','inbody','consult','groups','stats'];
     return valid.includes(hash) ? hash : 'dashboard';
   };
   const [page, setPageState] = useState(getPageFromUrl);
 
-  // URL ↔ page 양방향 연동
   const setPage = (p) => {
     setPageState(p);
     window.location.hash = p;
@@ -50,7 +48,6 @@ export default function App() {
   const sheets = useSheets();
   const reloadSheets = sheets.reload;
 
-  // 구글 시트 데이터는 최초 1회만 적용 (이후 자동 갱신이 로컬 편집을 덮어쓰지 않도록)
   const initialLoadDone = React.useRef({ patients: false, inbody: false, consults: false, bp: false, groups: false });
 
   useEffect(() => {
@@ -99,7 +96,6 @@ export default function App() {
   const isGuest = role === 'guest' || role === 'campGuest';
   const isCampGuest = role === 'campGuest';
 
-  // 캠프 게스트: 해당 캠프 환자 데이터만 필터링
   const visiblePatients = isCampGuest
     ? patients.filter(p => (p.캠프장소 || '').trim() === currentCamp.trim())
     : patients;
@@ -122,6 +118,9 @@ export default function App() {
     groups, setGroups,
     reloadSheets
   };
+
+  // ★ 게스트가 consult 페이지에 직접 접근하면 dashboard로 리다이렉트
+  const safePage = (isGuest && page === 'consult') ? 'dashboard' : page;
 
   const pages = {
     dashboard: <Dashboard db={db} setPage={setPage} />,
@@ -148,7 +147,7 @@ export default function App() {
       <Sidebar page={page} setPage={setPage} open={sidebarOpen} setOpen={setSidebarOpen} db={db} />
       <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="page-wrapper">
-          {pages[page] || pages.dashboard}
+          {pages[safePage] || pages.dashboard}
         </div>
       </main>
     </div>
