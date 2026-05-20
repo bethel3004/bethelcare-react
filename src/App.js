@@ -103,17 +103,21 @@ export default function App() {
     : isGuest
       ? patients.filter(p => GUEST_CAMPS.includes((p.캠프장소 || '').trim()))
       : patients;
+
   const campNames = isCampGuest
     ? new Set(visiblePatients.map(p => (p.성명 || '').trim()))
     : null;
-  const filterByCamp = arr => (isCampGuest && campNames)
-    ? arr.filter(r => {
-        const name = (r.성명 || '').trim();
-        return campNames.has(name);
-      })
-    : isGuest
-      ? arr.filter(r => GUEST_CAMPS.includes((r.캠프장소 || '').trim()))
-      : arr;
+
+  // 캠프장소 기준 필터 (혈당혈압 시트에도 캠프장소 열 추가됨)
+  const filterByCamp = arr => {
+    if (isCampGuest && campNames) {
+      return arr.filter(r => campNames.has((r.성명 || '').trim()));
+    }
+    if (isGuest) {
+      return arr.filter(r => GUEST_CAMPS.includes((r.캠프장소 || '').trim()));
+    }
+    return arr;
+  };
 
   const db = {
     role, isGuest, isCampGuest, currentCamp,
