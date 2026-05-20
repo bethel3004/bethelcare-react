@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 const ACCOUNTS = [
   { id: 'admin',  pw: '@Matthew33',  role: 'admin',  name: '관리자',   camp: '' },
   { id: 'staff',  pw: 'Bethel3004',  role: 'staff',  name: 'STAFF',    camp: '' },
-  { id: 'guest',  pw: 'guest0000',   role: 'guest',  name: '게스트',   camp: '' },
+  { id: 'guest',  pw: 'guest3004',   role: 'guest',  name: '게스트',   camp: '' },
 
   // ─── 캠프장소별 계정 ───────────────────────────────────────────────
   // 비밀번호(pw)와 캠프명(camp)을 실제 값으로 수정해서 사용하세요
