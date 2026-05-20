@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
 const MENU = [
-  { id:'dashboard', icon:'◈', label:'오늘의 현황' },
-  { id:'patients',  icon:'◉', label:'입소자 관리' },
-  { id:'bp_sugar',  icon:'♥', label:'혈당·혈압' },
-  { id:'inbody',    icon:'◎', label:'인바디 체성분' },
-  { id:'consult',   icon:'✦', label:'상담 일지', adminOnly: true },
-  { id:'groups',    icon:'◆', label:'기수·행사' },
-  { id:'stats',     icon:'◐', label:'통계·보고서' },
+  { id:'dashboard', icon:'◈', label:'오늘의 현황',  guestVisible: false },
+  { id:'patients',  icon:'◉', label:'입소자 관리',  guestVisible: false },
+  { id:'bp_sugar',  icon:'♥', label:'혈당·혈압',    guestVisible: true  },
+  { id:'inbody',    icon:'◎', label:'인바디 체성분', guestVisible: true  },
+  { id:'consult',   icon:'✦', label:'상담 일지',    guestVisible: false },
+  { id:'groups',    icon:'◆', label:'기수·행사',    guestVisible: false },
+  { id:'stats',     icon:'◐', label:'통계·보고서',  guestVisible: false },
 ];
 
 function useBreakpoint() {
@@ -57,8 +57,8 @@ export default function Sidebar({ page, setPage, open, setOpen, db }) {
     if (isMobile) setOpen(false);
   };
 
-  // ★ 게스트면 adminOnly 메뉴 숨김
-  const visibleMenu = MENU.filter(m => !(m.adminOnly && isGuest));
+  // ★ 게스트면 guestVisible: true 메뉴만 표시
+  const visibleMenu = isGuest ? MENU.filter(m => m.guestVisible) : MENU;
 
   return (
     <>
